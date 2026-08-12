@@ -8,14 +8,25 @@ Assembled August 2026 from a web sweep of roughly fifteen query formulations. Ve
 
 **Headline: no published study estimates the female share of people visible in public space across places, from imagery.** What exists is demographics-from-cars, pedestrian counts with gender attempted only for cyclists, a large street-view-and-gender literature about perceived safety in which women are the raters rather than the subjects, and pedestrian attribute recognition as a pure computer-vision benchmark.
 
-## Open items
+## Pre-emption sweep, August 2026
 
-Two searches have not been run and could pre-empt the study:
+Ran to find the paper that scoops us. It does not appear to exist. Queries covered working-paper venues, Rahul Goel's recent output, the NUS Urban Analytics Lab, Alice Evans' own work, and Chinese-language sources. Four findings changed something.
 
-1. SSRN, NBER, arXiv econ.GN, World Bank policy research working papers, and recent development-economics conference programs. The idea is obvious once Goel 2018 sits beside Goel 2022, so assign real probability that someone is on it.
-2. Chinese-language sources. The Chinese urban-informatics literature on street view is large and was not searched.
+**Nobody has taken the automated step to people.** Goel's group did scale up, in Kokka, Goel, Abbas, Nice, Martial, Labib, Ke, and coauthors, Vehicle detection from GSV imagery: predicting travel behaviour for cycling and motorcycling using computer vision, arXiv:2508.12794, 2025 `[fetched]`. Fine-tuned on six cities, 89% mean average precision, validated against survey and census mode share in 185 cities with predictions extended to 60 more. It detects **cycles and motorcycles only**, and the paper does not mention gender anywhere. The group with the strongest reason to move from vehicles to pedestrians, and the 2018 hand-coded gender pilot to build on, went the other way.
 
-Also unresolved: whether the Maps Platform terms bar model inference as well as training (snippet-level only, and the highest-stakes unverified claim here); whether the YFCC100M S3 bucket is currently serving objects; and the author lists for several ScienceDirect items below, which returned 403.
+**The closest methodological ancestor is historical, and it should be cited.** Unveiling alternative quantitative narratives of gender and employment in Southern Europe from 19th- and 20th-century photographs: from pixels to socioeconomic insights using computer vision techniques. *The History of the Family*, 2026, doi:10.1080/1081602X.2026.2660747 `[snippet, Taylor & Francis returned 403]`. Builds the Photo-BALL database from a historical photo archive of Baix Llobregat county, Catalonia, 1870 to 2021: automatic segmentation of regions containing people, classification by **perceived sex and age**, then systematic contrast between census declarations of occupation and the activities visible in the photographs, to recover women's work that official documentation misses. Same three-step method as ours, applied to a different question, one county, and a curated archive rather than a sampling frame. It is a precedent for publishability, not a scoop. Get the author list and read it properly.
+
+**Somebody has quantified the coverage bias we worry about.** Alpherts, T., Ghebreab, S., & van Noord, N. (2025). Artifacts of idiosyncracy in global street view data. arXiv:2505.11046 `[fetched]`. Shows that city idiosyncrasies such as layout bias street view data across 28 cities **even where coverage is dense**, proposes a method for evaluating those coverage distributions, and adds an Amsterdam case study with semi-structured interviews on how the collection process shapes which places get represented. This supports the within-cell identification argument directly, and it is the citation for why dense coverage is not the same as representative coverage.
+
+**Multimodal models are already being used to code street imagery at multi-city scale, without gender.** Street View Sociability: interpretable analysis of urban social behavior across 15 cities. arXiv:2508.06342, 2025 `[fetched]`. 2,998 street view images, 15 cities, a multimodal large language model coding social interaction into Mehta's passive, fleeting, and enduring taxonomy, correlated with place attachment and sky, green, and water indices. No people detection, no demographics. Note the shape of it: about 3,000 images across 15 cities, and the abstract reports no validation against human labels. That is the failure mode our design exists to avoid.
+
+Chinese-language search returned nothing counting pedestrian sex ratios. That literature runs to safety perception, streetscape aesthetics, street disorder measurement, age-friendliness, and women-friendly community design, including a Baidu street-view study of women's safety perception in Tianhe District, Guangzhou, published February 2026 `[snippet]`. Also found but not retrieved: Gender dynamics in urban space usage, a case study of Tebessa's historic city centre, Algeria, *Urban Science* 9(4):103, 2025 `[snippet, MDPI returned 403]`, apparently a single-city study of gender-specific pedestrian behaviour.
+
+No public evidence that Alice Evans has a street-imagery project of her own.
+
+## Still open
+
+Whether the Maps Platform terms bar model inference as well as training (snippet-level only, and the highest-stakes unverified claim here). Whether the YFCC100M S3 bucket is currently serving objects. Author lists for the Photo-BALL paper and for several ScienceDirect items below, all of which returned 403. And the sweep searched the open web rather than SSRN, NBER, and the AEA registry directly, so a targeted search inside those catalogues would still be worth ten minutes.
 
 ## The anchors
 

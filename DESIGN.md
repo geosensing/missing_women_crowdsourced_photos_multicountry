@@ -30,6 +30,10 @@ Three lessons follow. Walking is the hard signal. Gender is undeterminable about
 
 A large literature does connect gender and street view, but it studies women as raters of perceived safety rather than as subjects, and it does not help us.
 
+Two findings from a pre-emption sweep sharpen the position. Goel's group did automate their pilot, across 185 cities with 89% mean average precision, but they detect cycles and motorcycles and never mention gender (arXiv:2508.12794, 2025). The group with the strongest reason to move from vehicles to pedestrians went the other way, which is a fact about how hard the pedestrian problem is, not an oversight.
+
+And the closest methodological ancestor is historical. The Photo-BALL project segments people out of a photographic archive of one Catalan county covering 1870 to 2021, classifies them by perceived sex and age, and contrasts the result against census declarations of occupation to recover women's work that the official record misses (*The History of the Family*, 2026). Same three steps as ours, on a curated archive rather than a sampling frame, and in one county. It establishes that the method is publishable, and it leaves the cross-place present-day question open.
+
 ## Architecture: detect, then classify
 
 The GPT-4o failure has a known cause. Counting is the documented weak point of vision language models (arXiv:2401.17600), while attribute recognition on a single crop is a strength: a fine-tuned PaliGemma reaches 95.8% gender accuracy on FairFace, and GPT-4o handles multi-person attribute extraction well when prompted for it (arXiv:2410.24148). Asking one model to do both puts it where it is weakest.
@@ -64,7 +68,7 @@ Bin images into cells of about 50 meters, keep cells imaged in two or more disti
 
 The threat is that the capture process changes within a cell. A hobbyist cyclist at 3pm on a Sunday in 2016 and a mapping van at 9am on a Tuesday in 2023 produce a difference that is not a change in who is on the street. Mapillary carries what we need to condition on this: capture timestamps at second resolution, which Street View does not provide at all, plus creator ID, camera make and model, compass angle, and sequence ID. The identifying comparison is therefore within cell, within hour band and day type, and where possible within creator or camera class. That belongs in the design, not in a robustness appendix.
 
-The cost of skipping it is known. Seasonal capture bias alone produces 54% mean absolute percentage error on the Green View Index across 40 cities (*Computers, Environment and Urban Systems*, 2025), and street-view sampling over-represents non-residential space, which is itself gendered.
+The cost of skipping it is known. Seasonal capture bias alone produces 54% mean absolute percentage error on the Green View Index across 40 cities (*Computers, Environment and Urban Systems*, 2025), and street-view sampling over-represents non-residential space, which is itself gendered. Alpherts and coauthors go further and show that city layout biases street-view coverage across 28 cities even where coverage is dense, so a high image count is not evidence of a representative sample (arXiv:2505.11046).
 
 ### Flickr and YFCC100M: representation, not presence
 
