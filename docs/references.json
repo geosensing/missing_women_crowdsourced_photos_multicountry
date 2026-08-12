@@ -11,8 +11,25 @@
   },
   {
     "key": "kokka2025vehicles",
-    "arxiv": "2508.12794",
-    "note": "Goel group automated to 185 cities. Vehicles only, no gender."
+    "note": "Goel group automated to 185 cities. Vehicles only, no gender. Manual: DataCite splits the first author into two creators.",
+    "manual": {
+      "title": "Vehicle detection from GSV imagery: Predicting travel behaviour for cycling and motorcycling using Computer Vision",
+      "authors": [
+        "Kokka, Kyriaki",
+        "Goel, Rahul",
+        "Abbas, Ali",
+        "Nice, Kerry A.",
+        "Martial, Luca",
+        "Labib, S. M.",
+        "Ke, Rihuan",
+        "Schönlieb, Carola-Bibiane",
+        "Woodcock, James"
+      ],
+      "year": 2025,
+      "venue": "arXiv preprint",
+      "doi": "10.48550/arXiv.2508.12794",
+      "arxiv": "2508.12794"
+    }
   },
   {
     "key": "hou2024globalstreetscapes",

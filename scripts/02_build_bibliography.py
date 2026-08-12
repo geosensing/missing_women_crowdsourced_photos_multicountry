@@ -36,10 +36,13 @@ def fetch(url: str) -> dict:
 
 
 def from_crossref(message: dict) -> dict:
-    authors = [
-        " ".join(part for part in (a.get("family"), a.get("given")) if part).strip()
-        for a in message.get("author", [])
-    ]
+    authors = []
+    for author in message.get("author", []):
+        family, given = author.get("family"), author.get("given")
+        if family and given:
+            authors.append(f"{family}, {given}")
+        elif family or given:
+            authors.append(family or given)
     issued = message.get("issued", {}).get("date-parts", [[None]])[0]
     container = message.get("container-title") or [""]
     return {
