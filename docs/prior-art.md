@@ -38,7 +38,7 @@ Goel, R., Garcia, L. M. T., Goodman, A., Johnson, R., Aldred, R., Murugesan, M.,
 
 Follow-on: UChicago RCC feature on the Bhalla, Woodcock, and Murugesan worldwide transportation census. https://rcc.uchicago.edu/about-rcc/news-features/transforming-street-view-worldwide-transportation-census `[fetched]` Confirms an automated recognition module to scale beyond manual coding, and states explicitly that they could also collect data on the gender of cyclists. This is the closest group; check for unpublished gender work.
 
-Vainio (verify spelling from the Chalmers record). The gender of walking: female pedestrians in street photographs 1890-1989. *Urban History* 48(2), 2021, open access. https://research.chalmers.se/en/publication/519244 `[snippet]`
+Männistö-Funk, T. The gender of walking: female pedestrians in street photographs 1890-1989. *Urban History*, published online 2019, issue 48(2) 2021, open access. doi:10.1017/S0963926819000981 `[resolved via Crossref]`
 About 3,500 hand-coded street photographs of Turku, Finland across a century. Finds women were the largest continuous group of pedestrians throughout. The direct methodological ancestor of what we are automating, and it carries the archival-photo selection critique.
 
 ## Base layer
@@ -104,7 +104,7 @@ Gehl Institute Public Life Data Protocol. https://github.com/gehl-institute/pldp
 Open specification for public-life observation built with Gehl, Copenhagen, San Francisco, and Seattle DOT. More than 80 coded attributes of who occupies space, including gender and age, with explicit guidance on observing the same place across days, times, and weather. Data from more than 250 cities.
 
 Safetipin. https://safetipin.com/ `[fetched]`
-Nine-parameter night-time urban safety audit collected from a windshield-mounted phone, with more than 35,000 audit points in Delhi since 2013, plus Bogota and Nairobi under a UN-Habitat partnership. Founding paper: Viswanath & Basu, SafetiPin: an innovative mobile app to collect data on women's safety in Indian cities, *Environment and Urbanization*, 2015 `[snippet]`.
+Nine-parameter night-time urban safety audit collected from a windshield-mounted phone, with more than 35,000 audit points in Delhi since 2013, plus Bogota and Nairobi under a UN-Habitat partnership. Founding paper: Viswanath, K., & Basu, A. (2015). SafetiPin: an innovative mobile app to collect data on women's safety in Indian cities. *Gender & Development* 23(1), doi:10.1080/13552074.2015.1013669 `[resolved via Crossref]`. An earlier draft of this file gave the venue as *Environment and Urbanization*, which was wrong.
 **Two caveats.** The gender parameter is an ordinal 0 to 3 rating of the diversity of women and children among people present, not a count, so it correlates with our estimand rather than measuring it. And the data is not public: aggregate PDF reports and their feature-extraction code (https://github.com/SafetiPin-App/SafetiPin_ML) are open, the audit points are shared with city governments and partners and viewable in the app. Access requires asking.
 
 Other time-use benchmarks: OECD Time Use Database (30 countries), the Multinational Time Use Study, Eurostat HETUS. `[snippet]`

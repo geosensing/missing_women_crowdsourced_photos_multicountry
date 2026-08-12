@@ -118,6 +118,18 @@ Safetipin has more than 35,000 audit points in Delhi since 2013, plus Bogota and
 
 State the estimand mismatch explicitly, because a referee will find it. Time-use surveys measure person-hours out of home. Imagery measures person-instances visible in public at capture moments, weighted by dwell time and by how street-facing the activity is. A woman who drives to a mall contributes far less to the imagery estimand than to the survey estimand.
 
+## Two assets we already own that change the pilot
+
+Both are in the `geosensing` organisation, and neither has been used for what it is now worth.
+
+`women-count` is 1,958 head-height phone photographs of Delhi, taken between 12 November 2016 and 11 January 2017 between 10:00 and 19:00, with 5,874 MTurk assignments coding 32,675 people, of whom 18.5% are women. Two properties nothing else in the collection has. The capture time is known from EXIF, which Street View never gives us. And every photo was coded three times independently, so **human disagreement is estimable**. That matters more than it sounds: human disagreement is the ceiling on what we can fairly demand of a model, and without it the two-point tolerance in the pilot below is a number we chose rather than a number we derived. Compute it first, then set the criterion.
+
+`streetsense` holds 7,923 Street View panorama identifiers with capture dates, sampled with `geo-sampling` in 2017 and 2018: Bangkok 999, Dhaka 246, Jakarta 978, Lagos 872, and Wayne County Michigan 4,828. All returned status OK. They were coded by MTurk for road condition, litter, and sidewalks, and never for people.
+
+That is a documented sampling frame in five non-Indian places spanning most of the range we care about, and panorama identifiers are the one artifact Google's policy permits storing indefinitely, so the frame itself is clean. Re-pulling imagery against those identifiers is the restricted act, not holding them. If we did, we would get a cross-country pilot at zero sampling cost and an eight-year within-location panel, which is the only route to the headline design that does not depend on Mapillary happening to have repeat coverage.
+
+That requires reopening the decision to drop Street View. It is the first open question below, and this is what puts weight behind it.
+
 ## Proof of concept
 
 The point of running a proof of concept here is that we can grade it against a number fixed before it runs. Delhi and Mumbai already have a female pedestrian share near 19% to 20%, measured twice by instruments sharing nothing. If a Mapillary pipeline lands there, the source, the model, the estimator, and the sampling frame are vindicated at once. If it lands at 30%, we know before spending anything.
@@ -168,10 +180,10 @@ The known local failure mode is provenance. The first Street View round lost the
 
 ## Open decisions
 
-1. Street View is out as a collection source, on licensing. If Mapillary coverage comes back thin, do we take its historical revisits as a fallback and accept the terms risk?
+1. Street View is out as a collection source, on licensing. The 7,923 stored panorama identifiers in `streetsense` make that decision expensive: they buy five non-Indian places and an eight-year panel. Do we reopen it?
 2. How many places, and who codes the per-place calibration samples? This is the real budget line, and it is annotation, not compute.
 3. When do we approach Safetipin, before or after the proof of concept?
 
 ## References
 
-Full citations and verification status are in `docs/prior-art.md`.
+`docs/literature_review.md` has the comparison table: data, sample size, unit, coder, whether sex was coded, and what each study validated against. `docs/prior-art.md` has the full sweep with per-item verification status. `docs/refs.bib` is built by `make bib` from resolved identifiers, with `docs/reference_validation.csv` recording what each one returned.

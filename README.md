@@ -34,8 +34,11 @@ per-image count correlation: 0.696
 | Path | What it is |
 |---|---|
 | `DESIGN.md` | The research design. Start here. |
-| `docs/prior-art.md` | Literature and data-availability review, with per-item verification status |
+| `docs/literature_review.md` | Comparison table: data, n, unit, coder, sex coded, validation |
+| `docs/prior-art.md` | Full sweep and data-availability review, with per-item verification status |
+| `docs/refs.bib` | Bibliography, resolved from Crossref and DataCite by `make bib` |
 | `scripts/01_gpt4o_benchmark.py` | Rebuilds the benchmark above from frozen inputs |
+| `scripts/02_build_bibliography.py` | Resolves every citation from its identifier; nothing typed by hand |
 
 ## Related repositories
 

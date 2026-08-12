@@ -1,0 +1,139 @@
+[
+  {
+    "key": "gebru2017cars",
+    "doi": "10.1073/pnas.1700035114",
+    "note": "Demographics from cars, not people. 50M GSV images, 200 US cities."
+  },
+  {
+    "key": "goel2018streetimagery",
+    "doi": "10.1371/journal.pone.0196521",
+    "note": "The precedent. Gender determinable in 298 of 570 cyclists."
+  },
+  {
+    "key": "kokka2025vehicles",
+    "arxiv": "2508.12794",
+    "note": "Goel group automated to 185 cities. Vehicles only, no gender."
+  },
+  {
+    "key": "hou2024globalstreetscapes",
+    "note": "Proposed base layer. Mapillary and KartaView, CC BY-SA, person masks precomputed.",
+    "doi": "10.1016/j.isprsjprs.2024.06.023"
+  },
+  {
+    "key": "photoball2026",
+    "doi": "10.1080/1081602X.2026.2660747",
+    "note": "Closest methodological ancestor. Perceived sex and age from a historical photo archive."
+  },
+  {
+    "key": "alpherts2025idiosyncracy",
+    "arxiv": "2505.11046",
+    "note": "Dense street view coverage is still biased by city layout, 28 cities."
+  },
+  {
+    "key": "elrod2025sociability",
+    "doi": "10.1145/3736425.3772101",
+    "note": "GPT-4o-mini on Global Streetscapes, 15 cities, no human validation. The anti-model."
+  },
+  {
+    "key": "arif2025pedestrian",
+    "arxiv": "2511.22873",
+    "note": "ResNet50, far-view Dhaka crops, no faces, 86.2% gender accuracy."
+  },
+  {
+    "key": "aldahoul2025vlmfaces",
+    "arxiv": "2410.24148",
+    "note": "VLM facial attribute recognition. Refusal behaviour documented."
+  },
+  {
+    "key": "vlmcounting2024",
+    "arxiv": "2401.17600",
+    "note": "Counting is the VLM failure mode."
+  },
+  {
+    "key": "goel2022mobility",
+    "arxiv": "2208.08990",
+    "note": "India Time Use Survey. 53% of urban women did not leave home, against 14% of men."
+  },
+  {
+    "key": "guilbeault2024images",
+    "doi": "10.1038/s41586-024-07068-x",
+    "note": "Underrepresentation of women is worse in images than in text."
+  },
+  {
+    "key": "fatehkia2018facebook",
+    "doi": "10.1016/j.worlddev.2018.03.007",
+    "note": "Template for correcting a biased digital indicator against survey ground truth."
+  },
+  {
+    "key": "zagheni2018facebook",
+    "note": "Same correction template, PNAS.",
+    "doi": "10.1073/pnas.1717781115"
+  },
+  {
+    "key": "kashyap2025zensvi",
+    "arxiv": "2412.18641",
+    "note": "ZenSVI, tooling companion to Global Streetscapes."
+  },
+  {
+    "key": "svicoverage2025",
+    "arxiv": "2409.15386",
+    "note": "Street view over-represents non-residential space; recommends 50 to 60 m sampling."
+  },
+  {
+    "key": "vlmpar2025",
+    "arxiv": "2512.22217",
+    "note": "SigLIP 2 pedestrian attribute recognition, current SOTA on PA-100K."
+  },
+  {
+    "key": "seasonalbias2025",
+    "note": "54% MAPE on Green View Index from capture season alone.",
+    "doi": "10.1016/j.compenvurbsys.2025.102302"
+  },
+  {
+    "key": "finetimestamp2025",
+    "note": "Built to escape the daily-resolution temporal limit.",
+    "doi": "10.1016/j.cities.2025.106515"
+  },
+  {
+    "key": "viswanath2015safetipin",
+    "note": "Founding Safetipin paper. Gender parameter is ordinal, not a count.",
+    "doi": "10.1080/13552074.2015.1013669"
+  },
+  {
+    "key": "turku2021walking",
+    "note": "Century of hand-coded street photographs, Turku. Analog ancestor.",
+    "doi": "10.1017/S0963926819000981"
+  },
+  {
+    "key": "frome2009blurring",
+    "note": "Blurs more than 89% of faces. Why face-based classifiers are unusable here.",
+    "doi": "10.1109/ICCV.2009.5459413"
+  },
+  {
+    "key": "buolamwini2018gendershades",
+    "note": "34.7% error for darker-skinned women against 0.8% for lighter-skinned men.",
+    "manual": {
+      "title": "Gender Shades: Intersectional Accuracy Disparities in Commercial Gender Classification",
+      "authors": [
+        "Buolamwini, Joy",
+        "Gebru, Timnit"
+      ],
+      "year": 2018,
+      "venue": "Proceedings of Machine Learning Research",
+      "volume": "81",
+      "pages": "77-91",
+      "doi": "",
+      "url": "https://proceedings.mlr.press/v81/buolamwini18a.html"
+    }
+  },
+  {
+    "key": "thomee2016yfcc100m",
+    "note": "99.2M photos, about 49M geotagged, 2004 to 2014.",
+    "doi": "10.1145/2812802"
+  },
+  {
+    "key": "liu2017pa100k",
+    "note": "PA-100K benchmark. Chinese surveillance, out of distribution for our setting.",
+    "doi": "10.1109/ICCV.2017.46"
+  }
+]

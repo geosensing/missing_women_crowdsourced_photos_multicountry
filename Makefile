@@ -1,10 +1,13 @@
-.PHONY: benchmark lint clean
+.PHONY: benchmark bib lint clean
 
 STREETSCOPE ?= ../streetscope
 
 benchmark:
 	python3 scripts/01_gpt4o_benchmark.py \
 		--input $(STREETSCOPE)/data/mumbai/validation_results.csv
+
+bib:
+	python3 scripts/02_build_bibliography.py
 
 lint:
 	python3 -m black --check --line-length 100 scripts/
