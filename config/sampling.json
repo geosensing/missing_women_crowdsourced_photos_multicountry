@@ -1,0 +1,37 @@
+{
+  "seed": 20261115,
+  "version": "1.9.1",
+  "description": "Reproducible stratified city sampling on Global Streetscapes cities688.csv across 6 World Bank-derived regions x within-region income, with sqrt(population) weighted draw.",
+  "certainty_anchors": [
+    "New Delhi",
+    "Faisalabad"
+  ],
+  "eligibility_gates": {
+    "min_img_count": 400,
+    "require_population": true,
+    "require_income": true
+  },
+  "stratification": {
+    "target_total_cities": 101,
+    "region_col": "region",
+    "merge_americas": true,
+    "region_allocation": "sqrt",
+    "within_stratum_weighting": "sqrt_population",
+    "prefer_unrepresented_country": true,
+    "country_cap_mode": "pop_proportional",
+    "country_cap_min": 1,
+    "country_cap_max": 8,
+    "income_quantile_scope": "within_region",
+    "income_labels": ["Low", "High"],
+    "min_per_stratum": 0
+  },
+  "within_city_allocation": {
+    "max_total_inference_images": 50500,
+    "target_images_per_city": 500,
+    "round1_images_per_city": 100,
+    "person_mask_filter": true,
+    "person_mask_share": 1.0,
+    "zero_mask_audit_share": 0.0,
+    "calibration_images_per_city": 100
+  }
+}

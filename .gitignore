@@ -5,3 +5,10 @@ __pycache__/
 .DS_Store
 outputs/
 data/
+ms/*.aux
+ms/*.bbl
+ms/*.blg
+ms/*.fdb_latexmk
+ms/*.fls
+ms/*.log
+ms/*.out

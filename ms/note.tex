@@ -1,0 +1,82 @@
+\documentclass[12pt]{article}
+\usepackage[charter, cal=cmcal]{mathdesign}
+\usepackage[margin=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{threeparttable}
+\usepackage{natbib}
+\usepackage{setspace}
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    citecolor=black,
+    urlcolor=blue
+}
+\usepackage{placeins}
+
+\onehalfspacing
+\input{../tabs/results_macros}
+
+\title{Missing Women on Global Streets: A Research Note}
+\author{Gaurav Sood}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+\noindent How absent are women from city streets around the world? Using \TotalImages{} person-filtered street-level photographs across \TotalCities{} cities in \TotalCountries{} countries from the Global Streetscapes corpus, we measure apparent gender composition among \TotalPedestrians{} classified pedestrians and \TotalRiders{} two-wheeler riders. Globally, women account for \GlobalPedShare\% (95\% CI: [\GlobalPedCILo\%, \GlobalPedCIHi\%]) of classified pedestrians and \GlobalTWShare\% of two-wheeler riders, ranging from \MinCityPedShare\% to \MaxCityPedShare\% across cities.
+\end{abstract}
+
+\section{Introduction}
+Presence in public space is a direct, observable indicator of gender equity in freedom of movement, yet prior street-level audits have been limited to small purposive sites or single-country surveys \citep{viswanath2015safetipin, goel2022mobility, photoball2026}. Recent randomized street surveys in four Indian cities using wearable cameras \citep{karekurve2026streetscope} and Google Street View audits in three Indian cities \citep{sood2026streetsight} found that women make up roughly 20\% to 27\% of visible pedestrians. Whether that magnitude is distinctive to South Asia or varies systematically across regions and national income has remained unknown for lack of comparable, cross-national street-level measurement \citep{elrod2025sociability}.
+
+\section{Data and Sampling Design}
+We draw a reproducible stratified sample of 100 cities from the Global Streetscapes corpus \citep{hou2024globalstreetscapes} (688 cities; Mapillary and KartaView imagery). Eligibility requires at least 400 images and non-missing city population and World Bank GDP per capita PPP (543 eligible cities). Cities are stratified across 12 cells defined by 6 World Bank-derived regions (merging North America and Latin America \& Caribbean into Americas) crossed with within-region income halves. Regional quotas follow Bankier square-root allocation, and cities are drawn via Efraimidis--Spirakis $\sqrt{\text{population}}$ weighting with an unrepresented-country-first pass and a population-scaled per-country cap, yielding \TotalCities{} cities across \TotalCountries{} countries (with New Delhi included as a certainty benchmark).
+
+Within each city, we filter on precomputed Mask2Former instance counts ($\text{Person} + \text{Rider} \ge 1$) to avoid empty-road frames and draw 100 images per city in Round 1 (\TotalImages{} images). Each full-resolution frame is coded using \texttt{muse-spark-1.3-contributor} for pedestrian women, pedestrian men, two-wheeler women, two-wheeler men, and unclear-sex detections.
+
+\section{Results}
+\input{../tabs/table1_region_summary}
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.92\textwidth]{../figs/fig1_region_summary.pdf}
+\caption{Pedestrian female share across World Bank-derived regions with city-clustered 95\% confidence intervals. Dotted red line marks the global weighted mean (\GlobalPedShare\%); dashed gray line marks 50\% parity.}
+\label{fig:region_summary}
+\end{figure}
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.92\textwidth]{../figs/fig2_city_distribution.pdf}
+\caption{Distribution of pedestrian female share across \TotalCities{} sampled cities (95\% CIs clustered by image).}
+\label{fig:city_dist}
+\end{figure}
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.88\textwidth]{../figs/fig3_gdp_vs_female_share.pdf}
+\caption{National GDP per capita PPP (log scale) versus city-level pedestrian female share.}
+\label{fig:gdp}
+\end{figure}
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.88\textwidth]{../figs/fig4_pedestrian_vs_twowheeler.pdf}
+\caption{Female share among pedestrians (circles) versus two-wheeler riders (squares) by region.}
+\label{fig:modes}
+\end{figure}
+
+\FloatBarrier
+\bibliographystyle{plainnat}
+\bibliography{../docs/refs.bib}
+
+\clearpage
+\appendix
+\section{Pixel-Area Threshold Sensitivity}
+\input{../tabs/tableA1_pixel_threshold}
+
+\end{document}
