@@ -1,12 +1,4 @@
-"""Sample up to 2,000 person-containing images per selected city from Global Streetscapes.
-
-Streams only the required columns from Hugging Face Parquet files
-(simplemaps.parquet and instances.parquet) for the 100 cities in
-outputs/selected_cities.csv without downloading the 6 TB image corpus.
-Filters to images with Mask2Former Person/Bicyclist/Motorcyclist/Other-Rider >= 1,
-draws deterministically via SHA-256, and writes selected_images.csv,
-city_image_summary.csv, and image_sampling_manifest.json.
-"""
+"""Draw reproducible within-city samples from images with a positive person or rider mask."""
 
 from __future__ import annotations
 
@@ -54,7 +46,9 @@ def load_selected_cities(path: Path) -> dict[str, dict[str, str]]:
         return {row["city_id"]: row for row in csv.DictReader(handle)}
 
 
-def stream_city_images(cities_by_id: dict[str, dict[str, str]]) -> tuple[dict[str, dict], dict[str, int]]:
+def stream_city_images(
+    cities_by_id: dict[str, dict[str, str]], revision: str
+) -> tuple[dict[str, dict], dict[str, int]]:
     """Download/cache the two Parquet tables (0.7 GB total) and filter to selected city_ids."""
     target_id_strs = list(cities_by_id.keys())
     target_id_ints = [int(cid) for cid in target_id_strs]
@@ -64,7 +58,9 @@ def stream_city_images(cities_by_id: dict[str, dict[str, str]]) -> tuple[dict[st
     images_by_uuid: dict[str, dict] = {}
 
     print(f"Fetching {HF_SIMPLEMAPS} (cached via huggingface_hub)...")
-    simplemaps_path = hf_hub_download(repo_id=HF_REPO, filename=HF_SIMPLEMAPS, repo_type="dataset")
+    simplemaps_path = hf_hub_download(
+        repo_id=HF_REPO, filename=HF_SIMPLEMAPS, repo_type="dataset", revision=revision
+    )
     pf = pq.ParquetFile(simplemaps_path)
     for rg_idx in range(pf.num_row_groups):
         table = pf.read_row_group(rg_idx, columns=["uuid", "city_id", "source", "orig_id"])
@@ -83,6 +79,8 @@ def stream_city_images(cities_by_id: dict[str, dict[str, str]]) -> tuple[dict[st
             ):
                 cid_str = str(cid)
                 city_total_counts[cid_str] += 1
+                if uuid in images_by_uuid:
+                    raise ValueError(f"Duplicate frame UUID {uuid}")
                 images_by_uuid[uuid] = {
                     "uuid": uuid,
                     "city_id": cid_str,
@@ -94,7 +92,9 @@ def stream_city_images(cities_by_id: dict[str, dict[str, str]]) -> tuple[dict[st
     target_uuids = set(images_by_uuid.keys())
     person_cols = ["Person", "Bicyclist", "Motorcyclist", "Other-Rider"]
     print(f"Fetching {HF_INSTANCES} (cached via huggingface_hub)...")
-    instances_path = hf_hub_download(repo_id=HF_REPO, filename=HF_INSTANCES, repo_type="dataset")
+    instances_path = hf_hub_download(
+        repo_id=HF_REPO, filename=HF_INSTANCES, repo_type="dataset", revision=revision
+    )
     pf = pq.ParquetFile(instances_path)
     for rg_idx in range(pf.num_row_groups):
         table = pf.read_row_group(rg_idx, columns=["uuid", *person_cols])
@@ -103,16 +103,17 @@ def stream_city_images(cities_by_id: dict[str, dict[str, str]]) -> tuple[dict[st
         if hit_indices:
             sub = table.take(hit_indices).to_pydict()
             for idx, uuid in enumerate(sub["uuid"]):
-                p_cnt = int(round(sub["Person"][idx] or 0.0))
-                r_cnt = int(
-                    round(
-                        (sub["Bicyclist"][idx] or 0.0)
-                        + (sub["Motorcyclist"][idx] or 0.0)
-                        + (sub["Other-Rider"][idx] or 0.0)
-                    )
-                )
-                images_by_uuid[uuid]["person_count"] = p_cnt
-                images_by_uuid[uuid]["rider_count"] = r_cnt
+                rec = images_by_uuid[uuid]
+                if "person_count" in rec:
+                    raise ValueError(f"Duplicate instance UUID {uuid}")
+                values = [sub[col][idx] for col in person_cols]
+                if any(value is None for value in values):
+                    rec["person_count"] = rec["rider_count"] = None
+                    continue
+                if any(value < 0 or not float(value).is_integer() for value in values):
+                    raise ValueError(f"Invalid person or rider instance count for {uuid}: {values}")
+                rec["person_count"] = int(values[0])
+                rec["rider_count"] = int(sum(values[1:]))
 
     return images_by_uuid, city_total_counts
 
@@ -138,18 +139,21 @@ def main() -> None:
     config = json.loads(args.config.read_text(encoding="utf-8"))
     seed = int(config["seed"])
     alloc_cfg = config["within_city_allocation"]
-    target_inf = int(alloc_cfg["target_images_per_city"])
+    if not alloc_cfg["person_mask_filter"] or alloc_cfg["person_mask_share"] != 1.0:
+        raise ValueError("This design samples only mask-positive images.")
+    revision = config["corpus_revision"]
     round1_inf = int(alloc_cfg.get("round1_images_per_city", 100))
     target_cal = int(alloc_cfg["calibration_images_per_city"])
 
     cities_by_id = load_selected_cities(args.selected_cities)
-    images_by_uuid, city_total_counts = stream_city_images(cities_by_id)
+    images_by_uuid, city_total_counts = stream_city_images(cities_by_id, revision)
 
     people_by_city: dict[str, list[dict]] = defaultdict(list)
+    missing_by_city: dict[str, int] = defaultdict(int)
     for rec in images_by_uuid.values():
-        p_cnt = rec.get("person_count", 0)
-        r_cnt = rec.get("rider_count", 0)
-        if p_cnt + r_cnt >= 1:
+        if rec.get("person_count") is None:
+            missing_by_city[rec["city_id"]] += 1
+        elif rec["person_count"] + rec["rider_count"] >= 1:
             people_by_city[rec["city_id"]].append(rec)
 
     selected_rows: list[dict] = []
@@ -162,6 +166,7 @@ def main() -> None:
             people_by_city.get(cid, []),
             key=lambda r: deterministic_img_key(seed, cid, r["uuid"]),
         )
+        target_inf = int(city_meta["alloc_inference_images"])
         n_people = len(pool)
         inf_slice = pool[:target_inf]
         inf_rank = {r["uuid"]: i + 1 for i, r in enumerate(inf_slice)}
@@ -169,7 +174,8 @@ def main() -> None:
         # Prefer disjoint calibration images from the tail if pool > target_inf;
         # otherwise sample calibration from the top of the inference draw.
         if n_people > target_inf:
-            cal_slice = pool[target_inf : target_inf + target_cal]
+            cal_stop = target_inf + target_cal
+            cal_slice = pool[target_inf:cal_stop]
         else:
             cal_slice = pool[:target_cal]
         cal_uuids = {r["uuid"] for r in cal_slice}
@@ -188,8 +194,10 @@ def main() -> None:
                 role = "inference"
             else:
                 role = "calibration"
-            wave = "round1" if (rank is not None and rank <= round1_inf) else (
-                "round2" if rank is not None else "calibration"
+            wave = (
+                "round1"
+                if (rank is not None and rank <= round1_inf)
+                else ("round2" if rank is not None else "calibration")
             )
             selected_rows.append(
                 {
@@ -208,6 +216,8 @@ def main() -> None:
                 }
             )
 
+        missing = missing_by_city[cid]
+        observed = total_imgs - missing
         summary_rows.append(
             {
                 "city_id": cid,
@@ -215,8 +225,10 @@ def main() -> None:
                 "iso3": city_meta["iso3"],
                 "region": city_meta["region"],
                 "total_corpus_images": total_imgs,
+                "missing_instance_counts": missing,
+                "images_with_zero_mask": observed - n_people,
                 "images_with_people": n_people,
-                "person_mask_rate": f"{(n_people / total_imgs) if total_imgs else 0.0:.4f}",
+                "person_mask_rate": f"{n_people / observed:.4f}" if observed else "",
                 "sampled_inference_images": len(inf_slice),
                 "sampled_calibration_images": len(cal_slice),
             }
@@ -249,6 +261,8 @@ def main() -> None:
             "iso3",
             "region",
             "total_corpus_images",
+            "missing_instance_counts",
+            "images_with_zero_mask",
             "images_with_people",
             "person_mask_rate",
             "sampled_inference_images",
@@ -260,6 +274,7 @@ def main() -> None:
         "seed": seed,
         "config_version": config["version"],
         "sources": {
+            "hugging_face_revision": revision,
             "simplemaps": HF_SIMPLEMAPS,
             "instances": HF_INSTANCES,
             "selected_cities": file_digest(args.selected_cities),
@@ -267,9 +282,15 @@ def main() -> None:
         "counts": {
             "cities": len(summary_rows),
             "total_corpus_images": sum(r["total_corpus_images"] for r in summary_rows),
+            "total_missing_instance_counts": sum(
+                r["missing_instance_counts"] for r in summary_rows
+            ),
+            "total_images_with_zero_mask": sum(r["images_with_zero_mask"] for r in summary_rows),
             "total_images_with_people": sum(r["images_with_people"] for r in summary_rows),
             "sampled_inference_images": sum(r["sampled_inference_images"] for r in summary_rows),
-            "sampled_calibration_images": sum(r["sampled_calibration_images"] for r in summary_rows),
+            "sampled_calibration_images": sum(
+                r["sampled_calibration_images"] for r in summary_rows
+            ),
             "unique_sampled_images": len(selected_rows),
         },
         "outputs": {

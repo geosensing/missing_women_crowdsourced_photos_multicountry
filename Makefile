@@ -1,4 +1,4 @@
-.PHONY: benchmark bib sample sample-images figs note lint clean
+.PHONY: benchmark bib sample sample-images figs note test lint clean
 
 STREETSCOPE ?= ../streetscope
 
@@ -16,16 +16,22 @@ sample-images:
 	python3 scripts/04_sample_images.py
 
 figs:
-	uv run --with matplotlib --with pandas --with numpy python3 scripts/07_make_note_outputs.py
+	uv run --with matplotlib --with pandas --with jinja2 --with numpy python3 scripts/07_make_note_outputs.py
 	python3 scripts/08_pixel_threshold_check.py
+	uv run --with pandas --with jinja2 --with numpy python3 scripts/10_eval_calibration.py
+
+	python3 scripts/11_photo_context.py
 
 note: figs
 	cd ms && latexmk -pdf -interaction=nonstopmode note.tex
 
+test:
+	python3 -m unittest discover -s tests
+
 lint:
-	python3 -m black --check --line-length 100 scripts/
-	python3 -m isort --check-only --profile black --line-length 100 scripts/
-	python3 -m flake8 --max-line-length 100 scripts/
+	python3 -m black --check --line-length 100 scripts/ tests/
+	python3 -m isort --check-only --profile black --line-length 100 scripts/ tests/
+	python3 -m flake8 --max-line-length 100 scripts/ tests/
 
 clean:
-	rm -rf outputs/
+	cd ms && latexmk -c note.tex

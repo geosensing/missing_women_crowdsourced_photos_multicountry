@@ -65,6 +65,15 @@ def load_kv_urls(target_uuids: set[str]) -> dict[str, list[str]]:
     return urls
 
 
+def _fetch_to_file(url: str, dest: Path, timeout: int = 20) -> None:
+    """Download URL to dest with an explicit socket timeout."""
+    with urllib.request.urlopen(url, timeout=timeout) as resp:
+        data = resp.read()
+    tmp = dest.with_suffix(".tmp")
+    tmp.write_bytes(data)
+    tmp.replace(dest)
+
+
 def download_one(
     row: dict[str, str],
     out_dir: Path,
@@ -81,7 +90,7 @@ def download_one(
         last_err = "no_url"
         for url in kv_urls.get(uuid, []):
             try:
-                urllib.request.urlretrieve(url, dest)
+                _fetch_to_file(url, dest)
                 if dest.exists() and dest.stat().st_size > 0:
                     return {**row, "status": "ok", "local_path": str(dest)}
             except Exception as exc:
@@ -101,7 +110,7 @@ def download_one(
             img_url = payload.get("thumb_2048_url") or payload.get("thumb_1024_url")
             if not img_url:
                 return {**row, "status": "error:no_thumb_url", "local_path": ""}
-            urllib.request.urlretrieve(img_url, dest)
+            _fetch_to_file(img_url, dest)
             return {**row, "status": "ok", "local_path": str(dest)}
         except Exception as exc:
             return {**row, "status": f"error:{exc}", "local_path": ""}
@@ -114,6 +123,7 @@ def main() -> None:
     parser.add_argument("--images-csv", type=Path, default=Path("outputs/selected_images.csv"))
     parser.add_argument("--wave", default="round1", help="Wave to download (round1, round2, all)")
     parser.add_argument("--source", default="all", help="Filter source (all, KartaView, Mapillary)")
+    parser.add_argument("--max-rank", type=int, default=0, help="Max rank_in_city (0 = no limit)")
     parser.add_argument("--out-dir", type=Path, default=Path("data/images"))
     parser.add_argument("--workers", type=int, default=12)
     args = parser.parse_args()
@@ -127,6 +137,8 @@ def main() -> None:
         rows = [r for r in rows if r["wave"] == args.wave]
     if args.source != "all":
         rows = [r for r in rows if r["source"] == args.source]
+    if args.max_rank > 0:
+        rows = [r for r in rows if int(r["rank_in_city"]) <= args.max_rank]
 
     wave_dir = args.out_dir / args.wave
     wave_dir.mkdir(parents=True, exist_ok=True)

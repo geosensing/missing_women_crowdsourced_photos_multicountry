@@ -1,7 +1,7 @@
 """Rebuild the GPT-4o-versus-human benchmark that motivates the research design.
 
 Reads the frozen validation export from the sibling streetscope repository and
-reports detection recall by sex and the resulting bias in the female share.
+reports model-to-human count ratios by sex and differences in the female share.
 """
 
 from __future__ import annotations
@@ -24,7 +24,9 @@ AI_FIELDS = [
 
 def load(path: Path) -> pd.DataFrame:
     frame = pd.read_csv(path)
-    missing = [column for column in AI_FIELDS if column not in frame.columns]
+    missing = [
+        column for column in [*AI_FIELDS, "women_count", "men_count"] if column not in frame.columns
+    ]
     if missing:
         raise ValueError(f"Export is missing expected columns: {missing}")
     return frame
@@ -39,6 +41,9 @@ def benchmark(frame: pd.DataFrame) -> pd.DataFrame:
     """
     unparsed = frame[AI_FIELDS].isna().any(axis=1)
     parsed = frame.loc[~unparsed].copy()
+    counts = parsed[[*AI_FIELDS, "women_count", "men_count"]]
+    if counts.isna().any().any() or (counts < 0).any().any() or (counts % 1 != 0).any().any():
+        raise ValueError("Expected complete nonnegative integer counts on parsed images")
     parsed["human_pedestrians"] = parsed["men_count"] + parsed["women_count"]
     parsed["model_pedestrians"] = parsed["ai_men_count"] + parsed["ai_women_count"]
 
@@ -60,15 +65,29 @@ def benchmark(frame: pd.DataFrame) -> pd.DataFrame:
         },
     ]
     result = pd.DataFrame(rows)
-    result["recall"] = result["model"] / result["human"]
+    result["model_human_ratio"] = result["model"] / result["human"].where(result["human"] > 0)
 
-    human_share = parsed["women_count"].sum() / parsed["human_pedestrians"].sum()
-    model_share = parsed["ai_women_count"].sum() / parsed["model_pedestrians"].sum()
+    human_share = (
+        parsed["women_count"].sum() / parsed["human_pedestrians"].sum()
+        if parsed["human_pedestrians"].sum()
+        else float("nan")
+    )
+    model_share = (
+        parsed["ai_women_count"].sum() / parsed["model_pedestrians"].sum()
+        if parsed["model_pedestrians"].sum()
+        else float("nan")
+    )
     result.attrs["n_rows_total"] = len(frame)
     result.attrs["n_rows_parsed"] = len(parsed)
     result.attrs["human_female_share"] = human_share
     result.attrs["model_female_share"] = model_share
-    correlation = parsed["human_pedestrians"].corr(parsed["model_pedestrians"])
+    human_counts = parsed["human_pedestrians"]
+    model_counts = parsed["model_pedestrians"]
+    correlation = (
+        human_counts.corr(model_counts)
+        if human_counts.nunique() > 1 and model_counts.nunique() > 1
+        else float("nan")
+    )
     result.attrs["image_correlation"] = correlation
     return result
 
@@ -78,11 +97,12 @@ def report(result: pd.DataFrame) -> str:
         f"images: {result.attrs['n_rows_parsed']} parsed "
         f"of {result.attrs['n_rows_total']} sampled",
         "",
-        f"{'group':<20}{'human':>8}{'model':>8}{'recall':>9}",
+        f"{'group':<20}{'human':>8}{'model':>8}{'model/human':>13}",
     ]
     for _, row in result.iterrows():
         lines.append(
-            f"{row['group']:<20}{row['human']:>8.0f}" f"{row['model']:>8.0f}{row['recall']:>9.2f}"
+            f"{row['group']:<20}{row['human']:>8.0f}"
+            f"{row['model']:>8.0f}{row['model_human_ratio']:>13.2f}"
         )
     lines += [
         "",

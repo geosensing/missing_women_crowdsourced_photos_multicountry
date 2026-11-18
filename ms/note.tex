@@ -1,26 +1,20 @@
-\documentclass[12pt]{article}
-\usepackage[charter, cal=cmcal]{mathdesign}
-\usepackage[margin=1in]{geometry}
-\usepackage[T1]{fontenc}
+\documentclass[11pt]{article}
+\usepackage{working-paper}
 \usepackage{amsmath}
 \usepackage{graphicx}
 \usepackage{booktabs}
+\usepackage{multirow}
 \usepackage{threeparttable}
-\usepackage{natbib}
-\usepackage{setspace}
-\usepackage{hyperref}
-\hypersetup{
-    colorlinks=true,
-    linkcolor=blue,
-    citecolor=black,
-    urlcolor=blue
-}
 \usepackage{placeins}
 
-\onehalfspacing
 \input{../tabs/results_macros}
+\input{../tabs/calibration_macros}
+\input{../tabs/photo_context_macros}
+\input{../tabs/network_share_macros}
+\input{../tabs/timing_macros}
 
-\title{Missing Women on Global Streets: A Research Note}
+\title{\textsc{A Man Walks into the Frame}\\[0.25em]
+  \large Who Appears in Ground-Level Photographs from \TotalCities{} Cities?}
 \author{Gaurav Sood}
 \date{\today}
 
@@ -28,55 +22,196 @@
 \maketitle
 
 \begin{abstract}
-\noindent How absent are women from city streets around the world? Using \TotalImages{} person-filtered street-level photographs across \TotalCities{} cities in \TotalCountries{} countries from the Global Streetscapes corpus, we measure apparent gender composition among \TotalPedestrians{} classified pedestrians and \TotalRiders{} two-wheeler riders. Globally, women account for \GlobalPedShare\% (95\% CI: [\GlobalPedCILo\%, \GlobalPedCIHi\%]) of classified pedestrians and \GlobalTWShare\% of two-wheeler riders, ranging from \MinCityPedShare\% to \MaxCityPedShare\% across cities.
+\noindent In \TotalImages{} ground-level photographs from \TotalCities{} cities in \TotalCountries{} countries, women accounted for \GlobalPedShare\% of the pedestrians whose gender a vision model could classify (95\% confidence interval, \GlobalPedCILo--\GlobalPedCIHi\%). The pedestrian share varied by region. Women accounted for \ECAPedShare\% of classified pedestrian sightings in the sampled cities of Europe and Central Asia, \SouthAsiaPedShare\% in South Asia, and \MENAPedShare\% in the region comprising the Middle East, North Africa, Afghanistan, and Pakistan. The regional ordering persisted after adjustment for weekday and local time. Among classified bicycle, motorcycle, and scooter riders, the share was \GlobalTWShare\% overall and lower than the pedestrian share in every region.
 \end{abstract}
 
 \section{Introduction}
-Presence in public space is a direct, observable indicator of gender equity in freedom of movement, yet prior street-level audits have been limited to small purposive sites or single-country surveys \citep{viswanath2015safetipin, goel2022mobility, photoball2026}. Recent randomized street surveys in four Indian cities using wearable cameras \citep{karekurve2026streetscope} and Google Street View audits in three Indian cities \citep{sood2026streetsight} found that women make up roughly 20\% to 27\% of visible pedestrians. Whether that magnitude is distinctive to South Asia or varies systematically across regions and national income has remained unknown for lack of comparable, cross-national street-level measurement \citep{elrod2025sociability}.
+For a street vendor, the pavement is a workplace. A commuter may pass the same spot twice a day and spend only minutes there. On a hot afternoon, the vendor who can least afford to leave may be the person a camera is most likely to record. Someone else may be there to meet a friend, buy groceries, or take a child home from school. A count of who is outside thus reflects both who is free to go out and who has reason, or little choice, to be there.
 
-\section{Data and Sampling Design}
-We draw a reproducible stratified sample of 100 cities from the Global Streetscapes corpus \citep{hou2024globalstreetscapes} (688 cities; Mapillary and KartaView imagery). Eligibility requires at least 400 images and non-missing city population and World Bank GDP per capita PPP (543 eligible cities). Cities are stratified across 12 cells defined by 6 World Bank-derived regions (merging North America and Latin America \& Caribbean into Americas) crossed with within-region income halves. Regional quotas follow Bankier square-root allocation, and cities are drawn via Efraimidis--Spirakis $\sqrt{\text{population}}$ weighting with an unrepresented-country-first pass and a population-scaled per-country cap, yielding \TotalCities{} cities across \TotalCountries{} countries (with New Delhi included as a certainty benchmark).
+Those opportunities and obligations can differ by gender. Concerns about harassment can shape where women go and how they get there \citep{phadke2011,borker2021safety,kondylis2025safespace}. Employment also shapes who has occasion to leave home. In India’s 2024 Time Use Survey, 25\% of women aged 15--59 and 75\% of men that age reported employment or related activities on the diary day \citep{nso2025timeuse}. Even among people in the same industry, the location of work can differ. In 2017--18, 72\% of women employed in apparel manufacturing in India were home-based workers, compared with 24\% of men in that industry \citep[Table~6]{raveendran2020home}.\footnote{Apparel making and custom tailoring together grew from 28.5\% of India’s unorganized manufacturing establishments in 2015--16 to 44.3\% in 2023--24 \citep[Table~3]{mohanan2025manufacturing}.} A tailor sewing at home can put in a full day’s paid work without making a commute. The jobs she can take may themselves depend on how far she can travel safely and who looks after her children. A photograph can show a difference in who is present. It cannot tell us how much of that difference arose from the jobs available to women, the journeys those jobs require, or constraints on making those journeys.
 
-Within each city, we filter on precomputed Mask2Former instance counts ($\text{Person} + \text{Rider} \ge 1$) to avoid empty-road frames and draw 100 images per city in Round 1 (\TotalImages{} images). Each full-resolution frame is coded using \texttt{muse-spark-1.3-contributor} for pedestrian women, pedestrian men, two-wheeler women, two-wheeler men, and unclear-sex detections.
+Travel surveys document differences in how women and men move through cities \citep{goel2022mobility,goel2023gendergap}. Photographs also record people who stay in one place, a feature earlier studies have used to examine women’s presence and social activity in public space \citep{turku2021walking,elrod2025sociability}. An early Delhi study counted people in 1,958 photographs taken at 196 locations \citep{sood2017womencount}. Later studies used wearable cameras and Google Street View in several Indian cities \citep{karekurve2026streetscope,sood2026streetsight}. Here we ask how the share of pedestrian sightings classified as women varies across regions in photographs from \TotalCountries{} countries. We report a separate share for two-wheeler riders and return to New Delhi to compare our estimates with the earlier counts.
 
-\section{Results}
+\section{Cities and Photographs}
+Global Streetscapes collected geotagged, ground-level photographs uploaded by Mapillary and KartaView contributors. For each candidate city, the researchers retrieved available images from the map tile containing its reference coordinate in the SimpleMaps World Cities Database. At the Equator, a tile measures about 2.4 km on each side. Neighborhoods outside that tile fell outside the city’s collection area. Contributors chose where to take photographs, which include roads, pedestrian squares, and paths through parks \citep{hou2024globalstreetscapes}. Of the \CorpusCities{} cities in the collection, \EligibleCities{} had at least 400 images, a recorded population, and a national estimate of gross domestic product (GDP) per capita adjusted for purchasing power. We grouped cities by World Bank region, combining the Americas, and divided the cities in each region into two groups by national GDP per capita. Each region received sampling slots in proportion to the square root of its number of eligible cities. Within each of the \TotalStrata{} groups, the draw favored larger cities and countries still absent from the sample. More populous countries could contribute more cities. New Delhi and Faisalabad entered the sample by design.
+
+Within each selected city, we kept photographs in which an automated scan had detected a person on foot or a rider. From those photographs we randomly drew up to 200 per city across two waves. A photograph could enter the sample wherever the contributor stood. Of \DrawnImages{} selected photographs, we retrieved \DownloadedImages{} and obtained counts for \TotalImages{}. We sent the photographs to Muse one at a time, shrinking larger images to fit within $1{,}600\times1{,}200$ pixels. We asked the model (\texttt{muse-spark-1.3-contributor}) to count visible people in public space. The pedestrian category covered adolescents and adults walking or standing off vehicles. A second category covered people riding bicycles, motorcycles, or scooters. The instructions excluded occupants of enclosed cars, buses, and trucks. The model recorded a single count of people whose gender it could not classify because they were too small, blurred, or partly hidden. These unclear sightings accounted for \UnclearShare\% of all sightings. Because Muse pooled them across travel modes, we cannot calculate what fraction of pedestrians it left unclassified.
+
+In the New Delhi area mapped in Appendix~\ref{sec:photo_context}, residential streets made up \DelhiResidentialLength\% of mapped road and path length, but only \DelhiResidentialPhotos\% of photos matched a residential street. In the London map area, footways made up \LondonFootwayLength\% of mapped length and accounted for \LondonFootwayPhotos\% of photos (Table~\ref{tab:network}). Coverage depends on what one wants to represent. Previous studies have compared imagery across street networks \citep{quinn2019every} and along walking commutes \citep{walkcoverage2023}. Our benchmark measures coverage of roads and paths. It gives no weight to time spent in a square, even when many people gather there.
+
+\section{Who Appears in the Photographs?}
+Of the \TotalPedestrians{} pedestrian sightings that Muse classified, it counted \WomenPedestrians{} as women. Each classified sighting carries equal weight, so a photograph with ten classified pedestrians contributes ten times as much as one with a single classified pedestrian. Pooling pedestrians and two-wheeler riders gives a share of \GlobalAllShare\% across the two coded groups. Both measures describe sightings at the photographed places and times. Estimating the share among everyone using a city’s public spaces would also require knowing how many people were present in places and at times the cameras missed.
+
+The regional pedestrian shares were highest in Europe and Central Asia and lowest in the region comprising the Middle East, North Africa, Afghanistan, and Pakistan (Table~\ref{tab:region_summary} and Figure~\ref{fig:region_summary}). When we compared regions at a common mix of weekdays and local capture times, the regional ordering held. Adjusting for timing changed the shares within the comparison window by at most \MaxTimingShift{} percentage points (Table~\ref{tab:regional_timing}). In every region the share was lower among riders than among pedestrians (Figure~\ref{fig:modes}). Appendix~\ref{sec:variation} compares the pedestrian share by the type of road or path nearest the camera and by capture time within cities. The rider estimates draw on \TotalRiders{} classified sightings.
+
+In Delhi, the studies converge on roughly one woman in five. In the original street photographs, women accounted for 18.5\% of everyone visible \citep{sood2017womencount}. In wearable-camera photographs, human coders classified 19.8\% of 3,020 adult pedestrian sightings as women \citep{karekurve2026streetscope}. In Google Street View, the corresponding estimate was 20.0\% of 1,453 pedestrian sightings \citep{sood2026streetsight}. Our New Delhi estimate was somewhat higher and less precise. Muse classified \DelhiWomen{} of \DelhiPedestrians{} pedestrian sightings as women (\DelhiShare\%, approximate 95\% confidence interval \DelhiLo--\DelhiHi\%). The photographs covered different locations and times, so a difference of a few percentage points could reflect who was present as well as how they were counted. Across all \IndiaCities{} sampled Indian cities (\IndiaImages{} photographs), the pooled share is \IndiaPedShare\% (95\% interval \IndiaPedCILo--\IndiaPedCIHi\%), aligning closely with South Asia as a whole (\SouthAsiaPedShare\%, \SouthAsiaPedCILo--\SouthAsiaPedCIHi\%) and with the 20--27\% range documented across Indian cities in \citet{karekurve2026streetscope} and \citet{sood2026streetsight}.
+
+The highest city share, \MaxCityPedShare\%, rests on just \MaxCityPedCount{} classified pedestrian sightings. Figure~\ref{fig:city_dist} gives the sighting count alongside each city's share. Across cities, a doubling of national GDP per capita corresponded to a difference of \IncomeSlope{} percentage points in the share of pedestrians classified as women (Figure~\ref{fig:gdp}). When we compared cities within the same region, the corresponding difference was \WithinRegionIncomeSlope{} percentage points. Both comparisons give more weight to cities with more classified pedestrians.
+\begin{table}[ht]
+\centering
+\caption{Women among classified pedestrians and two-wheeler riders by region.}
+\label{tab:region_summary}
+\begin{threeparttable}
+\footnotesize
 \input{../tabs/table1_region_summary}
+\begin{tablenotes}[flushleft]\footnotesize
+\item Counts refer to coded images and classified pedestrian sightings. The next two columns give the share classified as women among pedestrians and riders, respectively. Approximate 95\% intervals allow sightings from the same city to vary together. The last column gives the share of all detected sightings with unclear sex.
+\end{tablenotes}
+\end{threeparttable}
+\end{table}
 
-\begin{figure}[ht]
+\begin{figure}[!htbp]
 \centering
 \includegraphics[width=0.92\textwidth]{../figs/fig1_region_summary.pdf}
-\caption{Pedestrian female share across World Bank-derived regions with city-clustered 95\% confidence intervals. Dotted red line marks the global weighted mean (\GlobalPedShare\%); dashed gray line marks 50\% parity.}
+\caption{Share of classified pedestrians who were coded as women, by region. Horizontal bars show approximate 95\% confidence intervals allowing counts within a city to vary together. The dotted line gives the pooled share (\GlobalPedShare\%) and the dashed line marks equal numbers of women and men.}
 \label{fig:region_summary}
 \end{figure}
 
-\begin{figure}[ht]
+\begin{figure}[!htbp]
 \centering
 \includegraphics[width=0.92\textwidth]{../figs/fig2_city_distribution.pdf}
-\caption{Distribution of pedestrian female share across \TotalCities{} sampled cities (95\% CIs clustered by image).}
+\caption{Share of classified pedestrians coded as women in each city. Counts beside city names give the number of classified pedestrian sightings. Bars show approximate 95\% confidence intervals allowing counts within a photograph to vary together. Hollow points mark estimates at 0\% or 100\%, where this method cannot estimate uncertainty.}
 \label{fig:city_dist}
 \end{figure}
 
-\begin{figure}[ht]
+\begin{figure}[!htbp]
 \centering
 \includegraphics[width=0.88\textwidth]{../figs/fig3_gdp_vs_female_share.pdf}
-\caption{National GDP per capita PPP (log scale) versus city-level pedestrian female share.}
+\caption{Each point pairs a city's share of pedestrians coded as women with its national GDP per capita, adjusted for purchasing power. The fitted line weights cities by the number of classified pedestrian sightings. The horizontal axis uses a logarithmic scale.}
 \label{fig:gdp}
 \end{figure}
 
-\begin{figure}[ht]
+\begin{figure}[!htbp]
 \centering
 \includegraphics[width=0.88\textwidth]{../figs/fig4_pedestrian_vs_twowheeler.pdf}
-\caption{Female share among pedestrians (circles) versus two-wheeler riders (squares) by region.}
+\caption{Share coded as women among classified pedestrians (circles) and classified bicycle, motorcycle, and scooter riders (squares) in each region.}
 \label{fig:modes}
 \end{figure}
 
 \FloatBarrier
+\section{Comparison With a Human Coder}
+We selected \CalSelectedImages{} photographs for human review, sampling across regions and income groups. We restricted this comparison to photographs in which people occupied at least 5,000 pixels in total. A coder marked individual people without seeing the model's counts.\footnote{One photograph showed a person aboard a boat. The coder recorded the person as a pedestrian because the form had no category for a boat passenger. Muse returned only totals for the photograph, so its treatment of that person is unknown.} Table~\ref{tab:calibration} compares counts on the \CalImages{} usable photographs the coder reviewed.
+
+Among pedestrians and riders the coder classified, \CalAllHumanShare\% were women, compared with \CalAllMuseShare\% for Muse. Photographs with more people in the human count generally had more in the model count (correlation \CalCorrAll{} for classified sightings). The coder marked \CalHumanUnclear{} people as unclear and Muse marked \CalMuseUnclear{}. Because Muse returned totals for each photograph, individual detections cannot be matched to the coder's marks.
+
+Among pedestrians, the model counted a larger fraction of the coder's total for women (\CalPedRatioW{}) than for men (\CalPedRatioM{}). If those ratios held across all \TotalImages{} photographs, correcting for the larger shortfall among men would lower the share of pedestrians counted as women from \GlobalPedShare\% to \GlobalPedCorrShare\%. Repeating the calculation for pedestrians and riders together would lower the share from \GlobalAllShare\% to \GlobalAllCorrShare\%. That assumption is difficult to check. The coder reviewed only photographs above the pixel threshold. The three regions with the lowest observed pedestrian shares together contributed \CalSparseRegionImages{} of the \CalImages{} reviewed photographs. We therefore report the observed shares in the regional comparisons.
+
+\begin{table}[ht]
+\centering
+\caption{Human and Muse counts on the same \CalImages{} images.}
+\label{tab:calibration}
+\begin{threeparttable}
+\footnotesize
+\input{../tabs/table2_calibration}
+\begin{tablenotes}[flushleft]\footnotesize
+\item Each ratio compares total counts for the same category across paired images. The unclear category includes pedestrians and riders. A dash marks an undefined ratio.
+\end{tablenotes}
+\end{threeparttable}
+\end{table}
+
+\clearpage
 \bibliographystyle{plainnat}
 \bibliography{../docs/refs.bib}
 
 \clearpage
 \appendix
-\section{Pixel-Area Threshold Sensitivity}
-\input{../tabs/tableA1_pixel_threshold}
+\counterwithin{table}{section}
+\counterwithin{figure}{section}
+\renewcommand{\thetable}{\thesection\arabic{table}}
+\renewcommand{\thefigure}{\thesection\arabic{figure}}
+\section{How Much of the Photograph Do People Occupy?}
+Table~\ref{tab:pixel_threshold} shows how the counts change as we restrict the sample to photographs in which people occupy more pixels. Larger thresholds remove many photographs with few classifiable pedestrians.
+\begin{table}[ht]
+\centering
+\caption{Counts and pedestrian shares by minimum image area occupied by people.}
+\label{tab:pixel_threshold}
+\begin{threeparttable}
+\footnotesize
+\textit{A. All sampled cities}\par
+\input{../tabs/tableA1_pixel_threshold}\par\medskip
+\textit{B. Women among classified pedestrians, by region}\par
+\input{../tabs/tableA1_pixel_regions}
+\begin{tablenotes}[flushleft]\footnotesize
+\item Pixel counts cover pedestrians and riders in the \TotalImages{} coded images. In panel A, percentages in parentheses give the fractions of images and classified pedestrians retained. Unclear counts include pedestrians and riders. In panel B, $n$ counts classified pedestrian sightings and differences are in percentage points.
+\end{tablenotes}
+\end{threeparttable}
+\end{table}
+
+\clearpage
+\section{The Photographic Sample}
+\label{sec:photo_context}
+Of the \TotalImages{} coded photographs, \DaytimePhotos{} were taken from 6 a.m. to before 6 p.m. local time, \EveningPhotos{} from 6 p.m. to before 10 p.m., and \OvernightPhotos{} overnight. The local capture date or hour was unavailable for \NoTimePhotos{} photographs.
+
+After collecting the images, Global Streetscapes assigned each camera location the class of the nearest OpenStreetMap road or path within 10 meters, where a match was available \citep{hou2024globalstreetscapes}. One photograph from Vienna shows people crossing the open square at Stephansplatz. Its camera location matched a line tagged \texttt{pedestrian}. The tag describes a nearby mapped feature. The people in the frame can be anywhere in view. Table~\ref{tab:road_types} includes every coded photograph, including those without a match or a classified pedestrian.
+
+\begin{table}[!ht]
+\centering
+\caption{Nearest mapped road or path, as a percentage of coded photographs in each region.}
+\label{tab:road_types}
+\footnotesize
+\begin{threeparttable}
+\input{../tabs/tableB1_road_types}
+\begin{tablenotes}[flushleft]\footnotesize
+\item Each column uses all coded photographs in that region. Connecting ramps count toward the road class they serve. Other or mixed includes less common tags and segments with multiple tags. Unmatched photographs have no recorded road class.
+\end{tablenotes}
+\end{threeparttable}
+\end{table}
+
+Figure~\ref{fig:coverage} shows the camera locations. In the New Delhi panel, tertiary roads account for the largest share of photo matches, although residential and service roads each make up a larger share of network length. In the London panel, primary roads account for a larger share of photos than of network length (Table~\ref{tab:network}).
+
+\clearpage
+\begin{figure}[!ht]
+\centering
+\includegraphics[width=.96\textwidth]{../figs/figB1_photo_locations.pdf}
+\caption{Camera locations in two sampled cities. Each dot marks one coded photograph. Nearby or repeated camera positions overlap. New Delhi is the site of the earlier benchmark study. London contributed the most classified pedestrian sightings. Map data \copyright{} OpenStreetMap contributors.}
+\label{fig:coverage}
+\end{figure}
+
+\begin{table}[!ht]
+\centering\singlespacing\footnotesize
+\caption{Road and path classes near camera locations and in the mapped network.}
+\label{tab:network}
+\begin{threeparttable}
+\input{../tabs/tableB2_network}
+\begin{tablenotes}[flushleft]\footnotesize
+\item Length is the share of mapped street and path kilometers inside each panel of Figure~\ref{fig:coverage}. We count each mapped line once, including separately mapped sidewalks and carriageways. The photo columns use all coded photographs in each panel. The network columns use linear features, including paths through squares where mapped. A plaza mapped as an area contributes no length of its own. Photo matches come from the Global Streetscapes release. Street lengths use a later OpenStreetMap extract, so changes in mapping can also contribute to differences.
+\end{tablenotes}
+\end{threeparttable}
+\end{table}
+
+\clearpage
+\section{Regional Shares, Capture Time, and Road Class}
+\label{sec:variation}
+\subsection{Comparing regions at the same times}
+A regional difference could arise if contributors in one region usually took pictures in the morning and those in another usually went out in the evening. Table~\ref{tab:regional_timing} compares the regions over a common window from 6 a.m. to before 10 p.m. local time. Every region contributed sightings in each of the four successive four-hour periods in this window. Sub-Saharan Africa had no classified sightings overnight.
+
+For each photograph we model the share of classified pedestrians coded as women, weighting by its number of classified pedestrians. Each city has its own baseline. We estimate differences across the seven weekdays and four time periods from comparisons within cities, assuming these timing differences are common across cities. We then calculate each region's share at the weekday and time mix of all classified sightings in the window. Within each region, cities retain their observed shares of sightings in that window. This comparison accounts for when contributors took pictures. The routes they chose and the people visible there can still differ.
+
+\begin{table}[!ht]
+\centering\footnotesize
+\caption{Regional pedestrian shares before and after adjustment for capture time.}
+\label{tab:regional_timing}
+\begin{threeparttable}
+\input{../tabs/tableC1_timing}
+\begin{tablenotes}[flushleft]\footnotesize
+\item Entries give percentages of classified pedestrian sightings coded as women. Sightings gives the count in the common window with a valid local date. The final two columns use the same sightings. For the adjusted intervals we resampled cities within each region and refit the model, holding the reference time mix fixed.
+\end{tablenotes}
+\end{threeparttable}
+\end{table}
+
+\clearpage
+\subsection{Nearby road class and capture time}
+In four Indian cities, \citet{karekurve2026streetscope} found that the share of classified pedestrians who were women was highest on residential roads in three cities and tied with primary roads in the fourth. We compare photographs matched to residential streets with those matched to primary roads, including their connecting ramps. In the \RoadPairedCities{} cities with classified pedestrians in both groups, the photographs contained \RoadResidentialN{} classified pedestrian sightings in the residential group and \RoadPrimaryN{} in the primary group.
+
+Within each city we subtract the primary-road share from the residential-street share. We give more weight to cities with more sightings on both types of street. For counts $r$ and $p$, the weight is $rp/(r+p)$, so a city with few sightings on either street type contributes little. The pooled difference was \RoadDifference{} percentage points (residential minus primary, 95\% interval \RoadLower{} to \RoadUpper{}). We obtained the interval by resampling whole cities with replacement. Restricting the comparison to the \RoadCheckCities{} cities with at least ten sightings on each street type gave a difference of \RoadCheckDifference{} points. The interval leaves room for differences in either direction, and this pooled comparison does not estimate how much the difference varies among cities.
+
+Figure~\ref{fig:capture_time} compares photographs taken at different times within the same city. Each classified pedestrian sighting carries equal weight. The comparison accounts for both weekday and time of day. Contributors could have photographed different places at different hours.
+
+\begin{figure}[!ht]
+\centering
+\includegraphics[width=.85\textwidth]{../figs/figC1_capture_time.pdf}
+\caption{Differences in the share of classified pedestrian sightings coded as women. Evening covers 6 p.m. to before 10 p.m. local time and daytime covers 6 a.m. to before 6 p.m. Both comparisons use photographs from these hours with a valid local date. Points give estimated differences and bars give 95\% confidence intervals allowing observations from the same city to vary together.}
+\label{fig:capture_time}
+\end{figure}
 
 \end{document}

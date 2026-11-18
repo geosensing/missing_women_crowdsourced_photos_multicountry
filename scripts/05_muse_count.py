@@ -1,6 +1,6 @@
 """Count women, men, two-wheeler riders, and unclear pedestrians via museclient.
 
-Supports both 1x1 full-res (default) and packed contact-sheet grids (e.g. 2x2),
+Supports both single images (default) and packed contact-sheet grids (e.g. 2x2),
 concurrent workers via ProcessPoolExecutor, hard USD spend caps, and incremental
 resumable CSV output.
 """
@@ -11,7 +11,6 @@ import argparse
 import base64
 import csv
 import io
-import math
 import sys
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from pathlib import Path
@@ -31,8 +30,10 @@ PROMPT = (
     "([1]..[{n}] in reading order, left-to-right, top-to-bottom).\n"
     "For EACH numbered panel, count visible people in public space (exclude people inside "
     "enclosed cars/buses/trucks, and exclude posters, billboards, mannequins, or statues):\n"
-    "- women_count: adult or adolescent women/girls walking or standing (pedestrians, not on vehicles)\n"
-    "- men_count: adult or adolescent men/boys walking or standing (pedestrians, not on vehicles)\n"
+    "- women_count: adult or adolescent women/girls walking or standing "
+    "(pedestrians, not on vehicles)\n"
+    "- men_count: adult or adolescent men/boys walking or standing "
+    "(pedestrians, not on vehicles)\n"
     "- women_twowheeler: women/girls riding bicycles, motorcycles, or scooters\n"
     "- men_twowheeler: men/boys riding bicycles, motorcycles, or scooters\n"
     "- unclear_count: pedestrians or riders too small, blurred, or occluded to classify by sex\n"
@@ -122,47 +123,35 @@ def _process_batch(batch_strs: list[str]) -> list[dict]:
     batch = [Path(p) for p in batch_strs]
     cols = _WORKER_CFG["cols"]
     rows = _WORKER_CFG["rows"]
-    jpeg_bytes = pack_grid(
-        batch, cols, rows, _WORKER_CFG["tile_width"], _WORKER_CFG["tile_height"]
-    )
+    jpeg_bytes = pack_grid(batch, cols, rows, _WORKER_CFG["tile_width"], _WORKER_CFG["tile_height"])
     b64 = base64.b64encode(jpeg_bytes).decode("ascii")
     prompt_text = PROMPT.format(cols=cols, rows=rows, n=len(batch))
 
-    try:
-        answer = _WORKER_CLIENT.complete(
-            [
-                {
-                    "role": "user",
-                    "content": [
-                        {"type": "text", "text": prompt_text},
-                        {
-                            "type": "image_url",
-                            "image_url": {"url": f"data:image/jpeg;base64,{b64}"},
-                        },
-                    ],
-                }
-            ],
-            schema=RESPONSE_SCHEMA,
-            max_completion_tokens=_WORKER_CFG["max_tokens"],
-            reasoning_effort=_WORKER_CFG["reasoning_effort"],
-        )
-        by_slot = {item["slot"]: item for item in answer["items"]}
-    except Exception as exc:
-        print(f"Batch ({batch[0].name}...) FAILED ({exc}); skipping")
-        return []
+    answer = _WORKER_CLIENT.complete(
+        [
+            {
+                "role": "user",
+                "content": [
+                    {"type": "text", "text": prompt_text},
+                    {
+                        "type": "image_url",
+                        "image_url": {"url": f"data:image/jpeg;base64,{b64}"},
+                    },
+                ],
+            }
+        ],
+        schema=RESPONSE_SCHEMA,
+        max_completion_tokens=_WORKER_CFG["max_tokens"],
+        reasoning_effort=_WORKER_CFG["reasoning_effort"],
+    )
+    items = answer["items"]
+    by_slot = {item["slot"]: item for item in items}
+    if len(items) != len(batch) or set(by_slot) != set(range(1, len(batch) + 1)):
+        raise ValueError("Model response must contain each requested slot exactly once")
 
     out_rows: list[dict] = []
     for slot_idx, path in enumerate(batch, start=1):
-        item = by_slot.get(
-            slot_idx,
-            {
-                "women_count": 0,
-                "men_count": 0,
-                "women_twowheeler": 0,
-                "men_twowheeler": 0,
-                "unclear_count": 0,
-            },
-        )
+        item = by_slot[slot_idx]
         wc = item["women_count"]
         mc = item["men_count"]
         wt = item["women_twowheeler"]
@@ -229,14 +218,17 @@ def main() -> None:
             for row in csv.DictReader(handle):
                 done_images.add(row["image"])
     todo = [p for p in paths if p.name not in done_images]
-    print(f"Total images: {len(paths):,}, already in {args.out}: {len(done_images):,}, todo: {len(todo):,}")
+    print(
+        f"Total images: {len(paths):,}, already in {args.out}: {len(done_images):,}, "
+        f"todo: {len(todo):,}"
+    )
     if not todo:
         return
 
-    batches = [
-        [str(p) for p in todo[i * batch_size : (i + 1) * batch_size]]
-        for i in range(math.ceil(len(todo) / batch_size))
-    ]
+    batches = []
+    for start in range(0, len(todo), batch_size):
+        end = start + batch_size
+        batches.append([str(path) for path in todo[start:end]])
     cfg = {
         "cols": cols,
         "rows": rows,
@@ -259,9 +251,13 @@ def main() -> None:
             initializer=_init_worker,
             initargs=(args.cap_usd, str(args.workdir), cfg),
         ) as ex:
-            futures = [ex.submit(_process_batch, b) for b in batches]
+            futures = {ex.submit(_process_batch, b): b for b in batches}
             for idx, fut in enumerate(as_completed(futures), start=1):
-                batch_rows = fut.result()
+                try:
+                    batch_rows = fut.result()
+                except Exception as exc:
+                    print(f"Batch {idx} failed ({futures[fut]}): {exc}", flush=True)
+                    continue
                 if batch_rows:
                     writer.writerows(batch_rows)
                     handle.flush()
@@ -270,6 +266,10 @@ def main() -> None:
                     spend = Client(cap_usd=args.cap_usd, workdir=str(args.workdir)).spend()
                     print(f"Batch {idx}/{len(batches)} (+{written:,} rows) -> spend={spend}")
 
+    if written != len(todo):
+        raise SystemExit(
+            f"Saved {written:,} of {len(todo):,} pending images. Rerun to retry the rest."
+        )
     print(f"Done: wrote {written:,} new rows to {args.out}")
 
 

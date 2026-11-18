@@ -1,14 +1,4 @@
-"""Select 100 cities via reproducible stratified sampling on Global Streetscapes.
-
-Reads config/sampling.json, data/raw/cities688.csv, and World Bank metadata
-(wb_countries.json, wb_gdp_pcap_pp.json, wb_pop_totl.json), filters eligible cities,
-bins income into within-region halves (Low/High) across 6 World Bank-derived
-regions (12 strata), allocates slots via square-root (Bankier) power allocation
-across regions and proportionally within regions, draws 100 cities deterministically
-via Efraimidis-Spirakis sqrt(population) SHA-256 keys with an unrepresented-country-
-first pass and population-scaled country cap, exports design weights, and writes
-outputs plus a SHA-256 manifest.
-"""
+"""Select cities from Global Streetscapes and estimate their inclusion probabilities."""
 
 from __future__ import annotations
 
@@ -17,7 +7,7 @@ import csv
 import hashlib
 import json
 import math
-from collections import defaultdict
+from collections import Counter, defaultdict
 from pathlib import Path
 
 DEFAULT_CONFIG = Path("config/sampling.json")
@@ -98,9 +88,7 @@ def load_cities(
     return enriched
 
 
-def assign_quantiles(
-    eligible: list[dict], value_key: str, out_col: str, labels: list[str]
-) -> None:
+def assign_quantiles(eligible: list[dict], value_key: str, out_col: str, labels: list[str]) -> None:
     """Assign equal-count quantile labels in place using deterministic tie-breaking."""
     ordered = sorted(eligible, key=lambda r: (r[value_key], r["city_id"]))
     n = len(ordered)
@@ -161,9 +149,7 @@ def allocate_quotas(
     return quotas
 
 
-def draw_cities(
-    rows: list[dict], config: dict, world_pop: float
-) -> tuple[list[dict], list[dict]]:
+def draw_cities(rows: list[dict], config: dict, world_pop: float) -> tuple[list[dict], list[dict]]:
     """Evaluate eligibility, bin quantiles, and run deterministic stratified selection."""
     seed = int(config["seed"])
     gates = config["eligibility_gates"]
@@ -235,8 +221,6 @@ def draw_cities(
                     "stratum": f"{record[region_col]}|{record['region_income_bin']}",
                     "stratum_eligible_n": "1",
                     "stratum_selected_n": "1",
-                    "inclusion_prob": "1.000000",
-                    "design_weight": "1.0000",
                 }
             )
         else:
@@ -263,9 +247,7 @@ def draw_cities(
     min_per_stratum = int(strat_cfg.get("min_per_stratum", 0))
     for region, r_quota in sorted(region_quotas.items()):
         r_strata = {
-            s: len(members)
-            for s, members in by_stratum.items()
-            if region_by_stratum[s] == region
+            s: len(members) for s, members in by_stratum.items() if region_by_stratum[s] == region
         }
         quotas.update(allocate_quotas(r_strata, r_quota, min_per_stratum=min_per_stratum))
 
@@ -350,8 +332,6 @@ def draw_cities(
         if n_h == 0:
             continue
         big_n_h = len(by_stratum[stratum])
-        pi_h = n_h / big_n_h
-        w_h = big_n_h / n_h
         for chosen in stratum_picks[stratum]:
             selected.append(
                 {
@@ -360,8 +340,6 @@ def draw_cities(
                     "stratum": stratum,
                     "stratum_eligible_n": str(big_n_h),
                     "stratum_selected_n": str(n_h),
-                    "inclusion_prob": f"{pi_h:.6f}",
-                    "design_weight": f"{w_h:.4f}",
                 }
             )
 
@@ -369,12 +347,13 @@ def draw_cities(
         alloc_cfg["target_images_per_city"],
         alloc_cfg["max_total_inference_images"] // max(1, len(selected)),
     )
-    person_imgs = round(per_city_cap * alloc_cfg["person_mask_share"])
-    audit_imgs = per_city_cap - person_imgs
     cal_imgs = alloc_cfg["calibration_images_per_city"]
 
     for row in selected:
-        row["alloc_inference_images"] = str(min(per_city_cap, int(row["img_count"])))
+        allocated = min(per_city_cap, int(row["img_count"]))
+        person_imgs = round(allocated * alloc_cfg["person_mask_share"])
+        audit_imgs = allocated - person_imgs
+        row["alloc_inference_images"] = str(allocated)
         row["alloc_person_mask_images"] = str(person_imgs)
         row["alloc_zero_mask_audit_images"] = str(audit_imgs)
         row["alloc_calibration_images"] = str(cal_imgs)
@@ -386,6 +365,72 @@ def draw_cities(
             row.pop("_gdp", None)
 
     return eligibility_rows, selected
+
+
+def estimate_probabilities(
+    rows: list[dict], config: dict, world_pop: float, eligibility: list[dict], selected: list[dict]
+) -> dict:
+    """Replay the full draw because ranks and country caps couple the strata."""
+    draws = int(config["probability_simulation"]["draws"])
+    first_seed = int(config["probability_simulation"]["first_seed"])
+    if draws < 2 or first_seed <= config["seed"] < first_seed + draws:
+        raise ValueError("Use at least two replay seeds distinct from the observed draw.")
+    hits = Counter()
+    for seed in range(first_seed, first_seed + draws):
+        _, sample = draw_cities(rows, {**config, "seed": seed}, world_pop)
+        ids = {r["city_id"] for r in sample}
+        if len(ids) != len(selected):
+            raise ValueError(f"Unexpected number of distinct cities in replay {seed}.")
+        hits.update(ids)
+
+    by_id = {}
+    for row in eligibility:
+        count = hits[row["city_id"]]
+        probability = count / draws
+        method = "monte_carlo"
+        if row["eligible"] == "0":
+            method = "ineligible"
+            if count:
+                raise ValueError(f"Ineligible city {row['city_id']} selected in replays.")
+        elif row["is_anchor"] == "1":
+            method = "certainty_anchor"
+            if count != draws:
+                raise ValueError(f"Anchor {row['city_id']} absent from a replay.")
+        # The plug-in SE degenerates at the simulation boundaries. Report
+        # the one-sided 95% binomial bound for these cases in the manifest.
+        if method != "monte_carlo":
+            se = 0.0
+        elif 0 < count < draws:
+            se = math.sqrt(probability * (1 - probability) / draws)
+        else:
+            se = None
+        fields = {
+            "probability_method": method,
+            "simulation_hits": count,
+            "simulation_draws": draws,
+            "inclusion_prob": f"{probability:.8f}",
+            "inclusion_prob_mc_se": "" if se is None else f"{se:.8f}",
+            "design_weight": f"{draws / count:.8f}" if count else "",
+        }
+        row.update(fields)
+        by_id[row["city_id"]] = fields
+    for row in selected:
+        fields = by_id[row["city_id"]]
+        if fields["simulation_hits"] == 0:
+            raise ValueError(f"Increase replay count to estimate a weight for {row['city_ascii']}.")
+        row.update(fields)
+    return {
+        "draws": draws,
+        "first_seed": first_seed,
+        "last_seed": first_seed + draws - 1,
+        "eligible_cities_with_zero_hits": sum(
+            r["eligible"] == "1" and not r["simulation_hits"] for r in eligibility
+        ),
+        "minimum_hits_among_selected": min(r["simulation_hits"] for r in selected),
+        "maximum_possible_mc_se": 0.5 / math.sqrt(draws),
+        "one_sided_95_upper_bound_after_zero_hits": -math.expm1(math.log(0.05) / draws),
+        "one_sided_95_lower_bound_after_all_hits": math.exp(math.log(0.05) / draws),
+    }
 
 
 def write_csv(path: Path, rows: list[dict]) -> None:
@@ -426,12 +471,14 @@ def main() -> None:
     if [r["city_id"] for r in selected] != [r["city_id"] for r in selected_verify]:
         raise AssertionError("Reproducibility check failed: draws did not match")
 
+    diagnostics = estimate_probabilities(rows, config, world_pop, eligibility_rows, selected)
     write_csv(args.eligibility_out, eligibility_rows)
     write_csv(args.selected_out, selected)
 
     manifest = {
         "seed": config["seed"],
         "config_version": config["version"],
+        "probability_simulation": diagnostics,
         "inputs": {
             "config": file_digest(args.config),
             "cities688": file_digest(args.cities),

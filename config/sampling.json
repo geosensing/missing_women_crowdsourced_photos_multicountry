@@ -1,6 +1,8 @@
 {
   "seed": 20261115,
-  "version": "1.9.1",
+  "version": "1.9.2",
+  "probability_simulation": {"first_seed": 0, "draws": 50000},
+  "corpus_revision": "7bd2e7697a3cb5f74ff05bd718babdb927f8b60d",
   "description": "Reproducible stratified city sampling on Global Streetscapes cities688.csv across 6 World Bank-derived regions x within-region income, with sqrt(population) weighted draw.",
   "certainty_anchors": [
     "New Delhi",

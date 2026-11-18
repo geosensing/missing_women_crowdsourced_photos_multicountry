@@ -152,5 +152,107 @@
     "key": "liu2017pa100k",
     "note": "PA-100K benchmark. Chinese surveillance, out of distribution for our setting.",
     "doi": "10.1109/ICCV.2017.46"
-  }
+  },
+  {
+    "key": "borker2021safety",
+    "note": "Perceived risk of street harassment and women's college/route choices in Delhi.",
+    "doi": "10.1596/1813-9450-9731"
+  },
+  {
+    "key": "kondylis2025safespace",
+    "note": "Rio de Janeiro women-reserved transit cars: harassment vs. social stigma.",
+    "doi": "10.1016/j.jdeveco.2024.103392"
+  },
+  {
+    "key": "goel2023gendergap",
+    "note": "Global cross-city gender gap in active travel (walking and cycling).",
+    "doi": "10.1007/s11116-021-10259-4"
+  },
+  {
+    "key": "jayachandran2021norms",
+    "note": "Social norms as a barrier to women's employment and mobility in developing countries.",
+    "doi": "10.1057/s41308-021-00140-w"
+  },
+  {
+    "key": "asher2024mobility",
+    "note": "Gender-disaggregated intergenerational mobility in India (Asher, Novosad, Rafkin).",
+    "doi": "10.1257/app.20210686"
+  },
+  {
+    "key": "sen1990missing",
+    "note": "Foundational 'missing women' demographic accounting essay.",
+    "manual": {
+      "title": "More Than 100 Million Women Are Missing",
+      "authors": ["Sen, Amartya"],
+      "year": 1990,
+      "venue": "The New York Review of Books",
+      "volume": "37",
+      "pages": "61-66",
+      "doi": "",
+      "url": "https://www.nybooks.com/articles/1990/12/20/more-than-100-million-women-are-missing/"
+    }
+  },
+  {
+    "key": "phadke2011",
+    "note": "Feminist urban scholarship on women's access to public space.",
+    "manual": {
+      "title": "Why Loiter? Women and Risk on Mumbai Streets",
+      "authors": ["Phadke, Shilpa", "Khan, Sameera", "Ranade, Shilpa"],
+      "year": 2011,
+      "venue": "Penguin Books",
+      "type": "book",
+      "volume": "",
+      "pages": "",
+      "doi": "",
+      "url": ""
+    }
+  },
+  {
+    "key": "sood2017womencount",
+    "note": "Delhi photographs collected November 2016 to January 2017. Original images archived at doi:10.7910/DVN/CZBHQO.",
+    "manual": {
+      "type": "misc",
+      "title": "Missing Women on the Streets of Delhi",
+      "authors": ["Sood, Gaurav"],
+      "year": 2017,
+      "venue": "GitHub repository",
+      "volume": "",
+      "pages": "",
+      "doi": "",
+      "url": "https://github.com/geosensing/women-count"
+    }
+  },
+  {
+    "key": "karekurve2026streetscope",
+    "note": "Wearable-camera study across four Indian cities.",
+    "manual": {
+      "title": "Missing Women on Indian Streets",
+      "authors": ["Karekurve-Ramachandra, Varun", "Sood, Gaurav"],
+      "year": 2026,
+      "venue": "Working paper",
+      "volume": "",
+      "pages": "",
+      "doi": "",
+      "url": "https://gsood.com/research/papers/missing_women.pdf"
+    }
+  },
+  {
+    "key": "sood2026streetsight",
+    "note": "Google Street View audit across three Indian cities.",
+    "manual": {
+      "title": "StreetSight: Auditing Public Spaces for Missing Women and Urban Infrastructure Using Google Street View",
+      "authors": ["Sood, Gaurav"],
+      "year": 2026,
+      "venue": "GitHub repository",
+      "volume": "",
+      "pages": "",
+      "doi": "",
+      "url": "https://github.com/geosensing/streetsight"
+    }
+  },
+  {"key":"quinn2019every","doi":"10.1111/tgis.12571","note":"Comparison of coverage across three imagery platforms."},
+  {"key":"walkcoverage2023","doi":"10.1016/j.compenvurbsys.2023.101956","note":"Evaluates imagery coverage along walking commute routes."},
+  {"key":"nso2025timeuse","note":"All-India 2024 Time Use Survey, paid activities among people aged 15–59 on the diary day.","manual":{"title":"Time Use in India, 2024","authors":["{National Statistics Office}"],"year":2025,"venue":"Ministry of Statistics and Programme Implementation, Government of India","url":"https://mospi.gov.in/sites/default/files/publication_reports/TUS_Report_2024_28.03.2025F.pdf"}},
+  {"key":"raveendran2020home","note":"Table 6, home-based workers as a share of employment in wearing apparel by sex, 2017–18.","manual":{"title":"Home-Based Workers in India: A Statistical Profile","authors":["Raveendran, Govindan"],"year":2020,"venue":"WIEGO Statistical Brief No. 23","url":"https://www.wiego.org/research-library-publications/home-based-workers-india-statistical-profile/"}},
+  {"key":"mohanan2025manufacturing","doi":"10.25003/RAS.15.01.0004","note":"Table 3, share of unorganised manufacturing units in apparel making and custom tailoring."}
 ]

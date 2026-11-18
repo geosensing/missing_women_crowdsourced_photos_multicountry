@@ -1,17 +1,13 @@
-"""Build refs.bib from registered identifiers, resolving metadata from the source of record.
+"""Build the bibliography from Crossref, DataCite, and curated manual records.
 
-Every entry in docs/references.json carries either a DOI or an arXiv id. Crossref
-serves the DOIs, DataCite serves the arXiv ones. Nothing is typed by hand, so a
-wrong author list or year is a fetch failure rather than a silent error.
-
-Entries may instead carry a title query. Those resolve against Crossref search and
-print the DOI they matched so it can be pinned in the register; an unpinned query
-is reported as unverified.
+A failed or incomplete lookup leaves the existing bibliography and report intact.
 """
 
 from __future__ import annotations
 
 import argparse
+import csv
+import html
 import json
 import re
 import time
@@ -43,13 +39,14 @@ def from_crossref(message: dict) -> dict:
             authors.append(f"{family}, {given}")
         elif family or given:
             authors.append(family or given)
-    issued = message.get("issued", {}).get("date-parts", [[None]])[0]
+    date = message.get("published-print") or message.get("issued") or {}
+    issued = date.get("date-parts", [[None]])[0]
     container = message.get("container-title") or [""]
     return {
         "title": (message.get("title") or [""])[0],
         "authors": [a for a in authors if a],
         "year": issued[0],
-        "venue": container[0],
+        "venue": container[0] or message.get("publisher", ""),
         "volume": message.get("volume", ""),
         "number": message.get("issue", ""),
         "pages": message.get("page", ""),
@@ -87,6 +84,16 @@ def resolve(entry: dict) -> dict:
             record["matched_by"] = "manual"
             record.update(entry["manual"])
             record["status"] = "manual"
+            if "arxiv" in record:
+                arxiv = record["arxiv"]
+                source = from_datacite(
+                    fetch(DATACITE_WORK.format(arxiv=arxiv))["data"]["attributes"]
+                )
+                if source["doi"].lower() != record["doi"].lower():
+                    raise ValueError("DataCite returned a different DOI")
+                if source["title"].casefold().strip() != record["title"].casefold().strip():
+                    raise ValueError("Manual arXiv title differs from the DataCite record")
+                record["matched_by"] = "datacite/arxiv + manual authors"
         elif "query" in entry:
             record["matched_by"] = "crossref/query"
             url = CROSSREF_QUERY.format(query=urllib.parse.quote(entry["query"]))
@@ -97,6 +104,12 @@ def resolve(entry: dict) -> dict:
             record["status"] = "unpinned"
         else:
             raise KeyError("entry has no doi, arxiv, manual, or query")
+        if not all(record.get(field) for field in ("year", "authors", "title")):
+            raise ValueError("missing year, authors, or title")
+        if "doi" in entry and record["doi"].casefold() != entry["doi"].casefold():
+            raise ValueError("Crossref returned a different DOI")
+        if "arxiv" in entry and record["doi"].lower() != f"10.48550/arxiv.{entry['arxiv']}":
+            raise ValueError("DataCite returned a different DOI")
     except Exception as error:  # noqa: BLE001 - a failed lookup is a reportable result
         record["status"] = f"FAILED: {error}"
     return record
@@ -104,21 +117,28 @@ def resolve(entry: dict) -> dict:
 
 def bibtex(record: dict) -> str:
     authors = " and ".join(record.get("authors") or []) or "Unknown"
+    entry_type = record.get("type", "article")
     fields = {
         "author": authors,
         "title": record.get("title", ""),
-        "journal": record.get("venue", ""),
+        "publisher" if entry_type == "book" else "journal": record.get("venue", ""),
         "year": record.get("year", ""),
         "volume": record.get("volume", ""),
         "number": record.get("number", ""),
         "pages": record.get("pages", ""),
         "doi": record.get("doi", ""),
         "eprint": record.get("arxiv", ""),
+        "url": record.get("url", ""),
     }
+    for name in ("title", "author", "journal", "publisher"):
+        if name in fields:
+            value = html.unescape(re.sub(r"<[^>]*>", "", fields[name]))
+            value = re.sub(r"([&%_#$])", r"\\\1", value)
+            fields[name] = "{" + value + "}" if name == "title" else value
     body = "".join(
         f"  {name} = {{{value}}},\n" for name, value in fields.items() if str(value).strip()
     )
-    return f"@article{{{record['key']},\n{body}}}\n"
+    return f"@{entry_type}{{{record['key']},\n{body}}}\n"
 
 
 def main() -> None:
@@ -138,27 +158,22 @@ def main() -> None:
         print(f"{flag}{record['key']:<24}{record['status']:<12}{record.get('title', '')[:64]}")
         time.sleep(args.sleep)
 
+    failed = [r for r in records if r["status"].startswith("FAILED")]
+    if failed or not records or len({r["key"] for r in records}) != len(records):
+        raise SystemExit("Bibliography rebuild failed; see lookup results above.")
     args.bib.parent.mkdir(parents=True, exist_ok=True)
-    good = [r for r in records if not r["status"].startswith("FAILED")]
-    args.bib.write_text("".join(bibtex(r) for r in good))
+    args.report.parent.mkdir(parents=True, exist_ok=True)
+    args.bib.write_text("".join(bibtex(r) for r in records), encoding="utf-8")
 
     columns = ["key", "status", "matched_by", "year", "title", "authors", "venue", "doi"]
-    lines = [",".join(columns)]
-    for record in records:
-        row = []
-        for column in columns:
-            value = record.get(column, "")
-            if isinstance(value, list):
-                value = "; ".join(value)
-            value = re.sub(r'[\r\n"]', " ", str(value))
-            row.append(f'"{value}"')
-        lines.append(",".join(row))
-    args.report.write_text("\n".join(lines) + "\n")
-
-    failed = len(records) - len(good)
-    unpinned = sum(1 for r in records if r["status"] == "unpinned")
-    print(f"\n{len(good)} resolved, {failed} failed, {unpinned} unpinned")
-    print(f"wrote {args.bib} and {args.report}")
+    with args.report.open("w", newline="", encoding="utf-8") as handle:
+        writer = csv.DictWriter(
+            handle, fieldnames=columns, extrasaction="ignore", lineterminator="\n"
+        )
+        writer.writeheader()
+        for record in records:
+            writer.writerow({**record, "authors": "; ".join(record["authors"])})
+    print(f"Wrote {len(records)} records to {args.bib} and {args.report}")
 
 
 if __name__ == "__main__":

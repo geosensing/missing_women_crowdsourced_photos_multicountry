@@ -1,91 +1,63 @@
-# City Sampling Design
+# City and image sampling design
 
-Reproducible stratified sampling design for selecting **100 cities** from the Global Streetscapes corpus (`NUS-UAL/global-streetscapes`, 688 cities), enriched with official World Bank regions (`North America` + `Latin America & Caribbean` merged into `Americas`), GDP per capita PPP (`NY.GDP.PCAP.PP.CD`), and country population (`SP.POP.TOTL`).
+The study describes people a vision model could classify in sampled ground-level photographs. Its city frame consists of the 688 cities in Global Streetscapes. The available photographs depend on which places, dates, and viewpoints contributors recorded within the source collection’s tiles. The pooled Round 1 share gives each classified pedestrian sighting equal weight. Representing another population requires specifying which cities, photographs or people should count, and accounting for selection and missing observations.
 
-**Target inference population:** Well-mapped global cities in Global Streetscapes (`img_count >= 400`), rather than an unweighted census of all world cities. All parameters, thresholds, and the random seed (`20261115`) live in [`config/sampling.json`](../config/sampling.json) (`version: 1.9.1`).
+## Selecting cities
 
----
+The frozen city list supplies city population and image counts. World Bank records supply national GDP per capita at purchasing power parity, national population and region. A city qualified with at least 400 corpus images, a recorded population and a recorded national GDP figure. Of 688 cities, 543 qualified. The selection includes 101 cities in 88 countries. New Delhi and Faisalabad entered with certainty as benchmarks. The published seed is 20261115. [Sampling configuration](../config/sampling.json)
 
-## Stage 1: Eligibility Gates
+| Region | Cities in frame | Eligible | Selected | Inference images drawn across both rounds |
+|---|---:|---:|---:|---:|
+| Americas | 211 | 178 | 25 | 11,754 |
+| East Asia & Pacific | 117 | 94 | 18 | 9,000 |
+| Europe & Central Asia | 218 | 183 | 26 | 12,100 |
+| Middle East, North Africa, Afghanistan & Pakistan | 34 | 27 | 11 | 5,178 |
+| South Asia | 24 | 18 | 9 | 4,087 |
+| Sub-Saharan Africa | 66 | 43 | 12 | 5,835 |
+| No World Bank region | 18 | 0 | 0 | 0 |
+| **Total** | **688** | **543** | **101** | **47,954** |
 
-Inputs:
-- `data/raw/cities688.csv` (from `NUS-UAL/global-streetscapes`)
-- `data/raw/wb_countries.json` (official World Bank region classification per `iso3`)
-- `data/raw/wb_gdp_pcap_pp.json` (World Bank `NY.GDP.PCAP.PP.CD`, most recent non-empty value per `iso3`, used as a national macro-context proxy rather than subnational city GDP)
-- `data/raw/wb_pop_totl.json` (World Bank `SP.POP.TOTL`, most recent non-empty value per `iso3` and `WLD`, used for population-scaled country caps)
+North America and Latin America & the Caribbean form the Americas group. Within each region, eligible cities are sorted by national GDP per capita and city ID, then split into two halves by rank. The ID breaks ties when cities in the same country span the midpoint. This occurs in India, Italy and Japan. An income half describes its rank among regional peers and can include cities with the same national GDP as cities in the other half.
 
-A city is eligible if it passes all three baseline gates:
-1. `img_count >= 400` (`min_img_count = 400`)
-2. Non-missing `population` (`require_population = true`)
-3. Non-missing World Bank `gdp_pcap_pp` (`require_income = true`)
+After setting aside the anchors, the sampler allocates 99 slots to regions in proportion to the square root of their eligible non-anchor count. It divides each regional quota between the income halves in proportion to their size, with largest-remainder rounding. Within each region–income cell the city priority is `−log(U) / sqrt(city population)`, where the first 64 bits of a hash of the seed, cell and city ID determine `U`. A smaller value receives higher priority.
 
-All 688 cities are logged in `outputs/city_eligibility.csv` with `eligible` (`1`/`0`) and `failed_gates`.
+Cells take turns selecting cities. The first pass gives preference to countries that have yet to contribute a city. The second pass fills remaining slots under a country cap of `round(101 × country population / world population)`, bounded between one and eight. If a quota still has empty slots, the remaining cities fill it in priority order. Both passes include anchors when counting how many cities a country has contributed. [Selection implementation](../scripts/03_select_cities.py)
 
----
+### Computing the city weights
 
-## Stage 2: Stratified Selection (100 Cities)
+The code repeats the complete city draw using 50,000 additional seeds, 0 through 49,999. A city's estimated inclusion probability is the fraction of those draws that selected it. Its estimated design weight is the reciprocal. Both CSVs report the hit count, number of replays, inclusion probability, simulation standard error and weight. The full eligibility file includes every city, so analysts can check support across the frame. The selected-city file also reports the number of eligible and selected non-anchor cities in each cell, with a separate one-city cell size for each anchor. Replaying complex sampling designs is a standard way to estimate inclusion probabilities. [Monte Carlo sampling weights](https://doi.org/10.1093/biomet/93.2.269)
 
-Among the **543 eligible cities**:
-1. **Certainty anchors ($n = 2$):** **New Delhi** (`city_id = 1356215164`, `img_count = 1,371`) and **Faisalabad** (`city_id = 1586323916`, `img_count = 3,770`) are included with probability 1 (`inclusion_prob = 1.0`, `design_weight = 1.0`) as benchmark/regional anchors. *(Note: Mumbai, Bangalore, and Navi Mumbai are not in `cities688.csv`.)*
-2. **Macro-regions (6 World Bank-derived regions):** `East Asia & Pacific`, `Europe & Central Asia`, `Middle East, North Africa, Afghanistan & Pakistan`, `South Asia`, `Sub-Saharan Africa`, and `Americas` (merging World Bank `North America` and `Latin America & Caribbean`).
-3. **Within-region income split (`region_income_bin`):** Eligible cities are binned within each of the 6 regions using deterministic `(gdp_pcap_pp, city_id)` ordering into `Low` (below region median) and `High` (above region median), forming **12 strata** (`region | region_income_bin`).
-4. **Two-stage allocation & $\sqrt{\text{population}}$-weighted draw:**
-   - **Across regions:** The 99 non-anchor slots are allocated across the 6 regions via **Bankier square-root ($\sqrt{N_{\text{region}}}$) power allocation** (`region_allocation = "sqrt"`).
-   - **Within regions:** Each region's quota is allocated proportionally across its `Low` and `High` strata via largest-remainder (`min_per_stratum = 0`).
-   - **Weighted draw & country dispersion:** Within each stratum, cities are ordered by deterministic Efraimidis–Spirakis weighted `SHA-256` keys (`-ln(u) / sqrt(population)`) so larger, recognizable cities are favored without erasing mid-sized cities. Cities are drawn round-robin across strata in two passes: **Pass 1** prefers countries with `0` selected cities so far (`prefer_unrepresented_country = true`), and **Pass 2** fills remaining slots up to a population-scaled per-country cap `clamp(round(100 * country_pop / world_pop), 1, 8)`, with unconstrained fallback only when a stratum has no remaining under-cap candidates.
-5. **Stratum metadata:** `outputs/selected_cities.csv` exports `stratum_eligible_n` ($N_h$), `stratum_selected_n` ($n_h$), `inclusion_prob` ($n_h / N_h$), and `design_weight` ($N_h / n_h$) alongside city `population` for unweighted and population-weighted sensitivity checks.
+The two anchors have exact probability one and the ineligible cities have exact probability zero. For other cities, an observed frequency of zero or one can reflect simulation error. A city with zero hits has no estimated inverse weight. At either boundary, the manifest reports a one-sided 95% binomial bound and the CSV leaves the simulation standard error blank. For intermediate probabilities the standard error is `sqrt(p × (1 − p) / 50000)`. These measures describe simulation precision. They do not quantify uncertainty in the gender counts. A design-weighted estimate targeting all eligible cities requires positive inclusion probability for every eligible city and appropriate treatment of the second-stage image selection.
 
-### Regional Funnel & Allocation Summary
+In the East Asia & Pacific high-income cell, Seoul appeared in all 50,000 draws, Tokyo appeared in 29,583 (estimated probability 0.59166, weight 1.69), and Oshu appeared in 2,211 (0.04422, weight 22.61). Every eligible city appeared at least once. The least frequently drawn eligible city, Kawamata, appeared 58 times. Among the 101 cities in the observed sample, the smallest count was 1,004 for Fleury-les-Aubrais (0.02008, simulation standard error 0.00063, weight 49.80).
 
-| Region | Total | Eligible | Elig. Rate | Selected | Weight Range | Capped Images |
-| :--- | :---: | :---: | :---: | :---: | :---: | :---: |
-| **Europe & Central Asia** | 218 | 183 | 83.9% | 26 | 7.00 – 7.08 | 48,539 |
-| **Americas** | 211 | 178 | 84.4% | 25 | 6.85 – 7.42 | 46,522 |
-| **East Asia & Pacific** | 117 | 94 | 80.3% | 18 | 5.22 – 5.22 | 33,924 |
-| **Sub-Saharan Africa** | 66 | 43 | 65.2% | 12 | 3.50 – 3.67 | 20,791 |
-| **Middle East, North Africa, Afghanistan & Pakistan** | 34 | 27 | 79.4% | 10 | 2.60 – 2.80 | 17,575 |
-| **South Asia** | 24 | 18 | 75.0% | 9* | 1.00 – 2.25 | 11,205 |
-| **Total (incl. 18 ineligible territories)** | **688** | **543** | **78.9%** | **100** | **1.00 – 7.42** | **178,556** |
+## Selecting images
 
-*\*Includes certainty anchor New Delhi (`design_weight = 1.0`). Sample spans **87 countries** across **12 strata** (median city population: `1,126,534`).*
+From the pinned Global Streetscapes city metadata we identified 2,536,337 unique image IDs in the selected cities. The instance mask detected a person, bicyclist, motorcyclist or other rider in 1,492,859 images. The remaining images include 1,043,468 with observed zero counts and 10 without a complete mask record. The per-city mask rate divides positive masks by images with observed counts. The number of people and their gender composition in mask-negative or unmeasured images remain unknown. [Image selection implementation](../scripts/04_sample_images.py)
 
----
+Within each city, the draw orders positive-mask image IDs by the SHA-256 hash of the seed, city ID and image UUID. The inference draw takes the first 500, or all available images in a smaller pool. The first 100 per city form Round 1. A separate calibration reserve contains 9,939 images, with 1,300 shared with inference in cities with small pools. There are 56,593 distinct IDs across inference and the reserve. The later Label Studio validation exercise used a separate sample of Round 1 images.
 
-## Stage 3: Within-City Allocation (Person-Filtered)
+| Stage | Round 1 images |
+|---|---:|
+| Drawn | 10,100 |
+| Downloaded | 9,906 |
+| Coded | 9,835 |
 
-Executed by `scripts/04_sample_images.py` (`make sample-images`), which caches only the Parquet tables `simplemaps.parquet` and `instances.parquet` from `NUS-UAL/global-streetscapes` (~732 MB total, avoiding the ~6 TB image corpus):
+The Round 1 draw includes 9,268 Mapillary and 832 KartaView IDs. Coded coverage varies across cities, including 20 of 100 drawn in Seoul and 58 of 100 in Jakarta. An image ID denotes a corpus record. Some records have byte-identical photographs.
 
-- **Person-mask filter (`person_mask_filter = true`):** Restricts the within-city frame to images with at least one precomputed Mask2Former `Person`, `Bicyclist`, `Motorcyclist`, or `Other-Rider` instance (`1,489,150` of `2,532,567` corpus images across the 100 cities). Per-city `total_corpus_images`, `images_with_people`, and `person_mask_rate` are logged in `outputs/city_image_summary.csv` so unconditional street-level rates can be recovered if needed.
-- **Inference sample (two-wave):** Up to `500` person-containing images per city, sorted deterministically by `SHA-256(f"{seed}:img:{city_id}:{uuid}")` (**`47,454`** images across 100 cities):
-  - **Round 1 (`wave = "round1"`, `rank_in_city <= 100`):** Exact **`100`** images per city (**`10,000`** total: `9,175` Mapillary, `825` KartaView) for initial full-res (`1×1`) Muse counting, plots, and analysis (~$3).
-  - **Round 2 (`wave = "round2"`, `rank_in_city = 101..500`):** Remaining **`37,454`** images, ready to run without altering Round 1 once the pipeline is validated.
-- **Human calibration sample:** Up to `100` person-containing images per city (**`9,839`** total; disjoint from inference when a city has `> 500` person-containing images), yielding **`55,993` unique sampled images** in `outputs/selected_images.csv`.
+### Round 2 and the pixel cutoff
 
-### Empirical Pixel-Area Threshold & Bias Check (Round 1 Validation)
+The second wave in the image manifest consists of ranks 101 through 500, with 37,854 image IDs. The Round 2 download manifest used for the audit contains the 9,948 available IDs at ranks 101 through 200. Of those, 9,740 downloads succeeded and 4,007 IDs fall below 5,000 person/rider pixels. This batch used the positive-instance rule throughout. A threshold of 5,000 pixels was a proposed cost-saving restriction.
 
-In Round 1 (`9,721` coded images across all 100 cities), filtering only on Mask2Former `instances >= 1` still admitted images where pedestrians were small, distant silhouettes (`72.3%` of all detections fell into `unclear_count`). Joining Round 1 counts against `data/parquet/segmentation.parquet` (`Person + Bicyclist + Motorcyclist + Other-Rider` pixel counts) shows that images with `< 5,000` person/rider pixels (`41.0%` of Round 1 images) contributed only **`4.9%`** of sex-classified pedestrians (`454 / 9,212`), and filtering to **`pix >= 5,000`** introduces virtually no compositional bias globally or within any region:
+In Round 1, applying that cutoff after coding retains 5,835 of 9,835 images and 8,907 of 9,364 classified pedestrian sightings. The classified female share rises from 36.53% to 36.77%. This comparison tests sensitivity of model counts to the cutoff. Accuracy for people the model missed requires independent annotation. [Threshold results](../tabs/tableA1_pixel_threshold.tex)
 
-| Region | All `Person >= 1` (`pix >= 0`) | `pix >= 5,000` | Difference |
-| :--- | :---: | :---: | :---: |
-| **Europe & Central Asia** | 49.50% (`n = 2,677`) | 49.25% (`n = 2,605`) | −0.24 pp |
-| **East Asia & Pacific** | 43.54% (`n = 1,254`) | 44.22% (`n = 1,203`) | +0.68 pp |
-| **Americas** | 40.08% (`n = 1,300`) | 40.28% (`n = 1,194`) | +0.21 pp |
-| **Sub-Saharan Africa** | 30.51% (`n = 1,180`) | 30.65% (`n = 1,080`) | +0.14 pp |
-| **South Asia** | 26.49% (`n = 1,676`) | 26.57% (`n = 1,652`) | +0.08 pp |
-| **MENA, Afg. & Pak.** | 18.40% (`n = 1,125`) | 18.65% (`n = 1,024`) | +0.25 pp |
-| **Global** | **36.94%** (`n = 9,212`) | **37.19%** (`n = 8,758`) | **+0.25 pp** |
+## Reproduction
 
-Accordingly, `pix >= 5,000` is an empirically validated filter for Round 2: it cuts image volume and API cost by **41%** while retaining **95.1%** of sex-classified pedestrians and preserving regional female shares within `±0.7 pp`.
+With the four frozen files under `data/raw/`, run the city draw and then the image draw from the repository root.
 
----
-
-## Reproducibility Protocol
-
-Run Stage 1–2 offline from frozen inputs, and Stage 3 from Hugging Face Parquet metadata:
-
-```bash
+```sh
 make sample
 make sample-images
 ```
 
-`scripts/03_select_cities.py` re-derives the city draw from `seed = 20261115`, asserts an exact match, and writes `outputs/city_eligibility.csv`, `outputs/selected_cities.csv`, and `outputs/sampling_manifest.json`. `scripts/04_sample_images.py` writes `outputs/selected_images.csv`, `outputs/city_image_summary.csv`, and `outputs/image_sampling_manifest.json` (with byte counts and SHA-256 hashes of all inputs and outputs).
+The city draw reads `cities688.csv`, `wb_countries.json`, `wb_gdp_pcap_pp.json` and `wb_pop_totl.json`. It writes `outputs/city_eligibility.csv`, `outputs/selected_cities.csv` and `outputs/sampling_manifest.json`. The image draw uses the pinned revision of `simplemaps.parquet` and `instances.parquet` from the corpus. It writes `outputs/selected_images.csv`, `outputs/city_image_summary.csv` and `outputs/image_sampling_manifest.json`. The manifests record output hashes and the inputs used for each stage.

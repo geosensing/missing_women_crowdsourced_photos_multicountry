@@ -25,7 +25,8 @@ HTML_PAGE = """<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes">
+<meta name="viewport"
+  content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes">
 <title>Street Annotation</title>
 <style>
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -144,9 +145,11 @@ HTML_PAGE = """<!doctype html>
     <div class="actions">
       <button class="btn btn-prev" onclick="go(-1)">&#8592;</button>
       <button class="btn btn-flag" onclick="submit(1, false)">Bad</button>
-      <button class="btn btn-agree" id="primary-btn" onclick="submit(0, true)">Agree &#8594;</button>
+      <button class="btn btn-agree" id="primary-btn"
+        onclick="submit(0, true)">Agree &#8594;</button>
     </div>
-    <div class="hint" id="hint">Swipe right = Agree &amp; Next &middot; Swipe left = Bad image &middot; Pinch to zoom</div>
+    <div class="hint" id="hint">Swipe right = Agree &amp; Next &middot; Swipe left = Bad image
+      &middot; Pinch to zoom</div>
   </div>
 
 <script>
@@ -169,10 +172,11 @@ function render() {
   const done = items.filter(x => x.human).length;
   document.getElementById('progress').textContent = `${idx + 1} / ${items.length}`;
   document.getElementById('done-count').textContent = `${done} done`;
-  document.getElementById('city').textContent = it.city ? `${it.city} (${it.iso3})` : it.image.slice(0, 14);
+  document.getElementById('city').textContent = it.city
+    ? `${it.city} (${it.iso3})` : it.image.slice(0, 14);
   document.getElementById('img').src = `/image/${idx}`;
 
-  const src = it.human || (!it.blind && it.llm) || {women_count: 0, men_count: 0, women_twowheeler: 0, men_twowheeler: 0, unclear_count: 0};
+  const src = it.human || (!it.blind && it.llm) || {};
   cur = {
     wc: src.women_count || 0,
     mc: src.men_count || 0,

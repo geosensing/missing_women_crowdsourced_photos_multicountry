@@ -2,7 +2,7 @@
 
 ## Research design
 
-The hard part of this study is not getting the pictures. It is that the model doing the counting is wrong in a way that looks exactly like the answer. We ran GPT-4o over 100 street images that human coders had already counted. It found 40% of the people, and its recall differed by sex: 61% of the women, 35% of the men. A true female share of 19.6% came back as 29.8%. That error, ten points, is larger than the whole spread we are trying to measure across cities, which runs from about 18% to 27%.
+The hard part of this study is not getting the pictures. It is that the model doing the counting is wrong in a way that looks exactly like the answer. We ran GPT-4o over 100 street images that human coders had already counted. On the 87 images with usable responses it counted 198 pedestrians to the human coders’ 495. Its count of women was 61% of the human count and its count of men was 35%. The share classified as women rose from 19.6% in the human counts to 29.8% in the model counts. That error, ten points, is larger than the whole spread we are trying to measure across cities, which runs from about 18% to 27%.
 
 So the design below is organized around calibration rather than collection. Everything else is cheap.
 
@@ -92,11 +92,11 @@ Two limits to state up front. Eleven metros in the United States and Canada mean
 
 ## The calibration model
 
-Treat the classifier as a noisy instrument and estimate its error rates separately in every place, from human-coded subsamples. Two stages, both shown to be real by the GPT-4o run.
+Treat the classifier as a noisy instrument and estimate its error rates separately in every place, from human-coded subsamples. Individual matches between model detections and human marks would let us distinguish two sources of error.
 
-Detection: the probability that a person of each sex who is present gets counted at all. GPT-4o managed 0.61 for women and 0.35 for men, and that asymmetry alone moved the share by ten points.
+Detection is the probability that the model counts a person who appears in the photograph. The GPT-4o benchmark compared totals, so it cannot tell us which individuals the model missed.
 
-Classification: given detection, the probability that a woman is coded a woman and a man a man, plus the rate at which the coder declines to say.
+Classification measures, given detection, the probability that a woman is coded a woman and a man a man, plus the rate at which the coder declines to say.
 
 The observed share is a known function of the truth given those rates, so we invert it and propagate the uncertainty in the rates, which is Rogan-Gladen with a detection stage added.
 
