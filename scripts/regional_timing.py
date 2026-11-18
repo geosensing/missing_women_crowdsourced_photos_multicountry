@@ -72,7 +72,7 @@ def regional_timing(frame, draws=4000):
             ],
         }
     )
-    write_table(table, Path("tabs/tableC1_timing.tex"), "lrrrr")
+    write_table(table, Path("tabs/tableB1_timing.tex"), "lrrrr")
     out["shift"] = out.adjusted_pct - out.window_pct
     Path("tabs/timing_macros.tex").write_text(
         rf"\newcommand{{\MaxTimingShift}}{{{out['shift'].abs().max():.1f}}}" + "\n"

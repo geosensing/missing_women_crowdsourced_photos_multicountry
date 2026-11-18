@@ -121,7 +121,11 @@ Among pedestrians, the model counted a larger fraction of the coder's total for 
 \counterwithin{figure}{section}
 \renewcommand{\thetable}{\thesection\arabic{table}}
 \renewcommand{\thefigure}{\thesection\arabic{figure}}
-\section{How Much of the Photograph Do People Occupy?}
+\section{The Photographic Sample}
+\label{sec:photo_context}
+Of the \TotalImages{} coded photographs, \DaytimePhotos{} were taken from 6 a.m. to before 6 p.m. local time, \EveningPhotos{} from 6 p.m. to before 10 p.m., and \OvernightPhotos{} overnight. The local capture date or hour was unavailable for \NoTimePhotos{} photographs.
+
+\subsection{Visibility of people in the photographs}
 Table~\ref{tab:pixel_threshold} shows how the counts change as we restrict the sample to photographs in which people occupy more pixels. Larger thresholds remove many photographs with few classifiable pedestrians.
 \begin{table}[ht]
 \centering
@@ -140,10 +144,7 @@ Table~\ref{tab:pixel_threshold} shows how the counts change as we restrict the s
 \end{table}
 
 \clearpage
-\section{The Photographic Sample}
-\label{sec:photo_context}
-Of the \TotalImages{} coded photographs, \DaytimePhotos{} were taken from 6 a.m. to before 6 p.m. local time, \EveningPhotos{} from 6 p.m. to before 10 p.m., and \OvernightPhotos{} overnight. The local capture date or hour was unavailable for \NoTimePhotos{} photographs.
-
+\subsection{Camera locations and nearby roads and paths}
 After collecting the images, Global Streetscapes assigned each camera location the class of the nearest OpenStreetMap road or path within 10 meters, where a match was available \citep{hou2024globalstreetscapes}. One photograph from Vienna shows people crossing the open square at Stephansplatz. Its camera location matched a line tagged \texttt{pedestrian}. The tag describes a nearby mapped feature. The people in the frame can be anywhere in view. Table~\ref{tab:road_types} includes every coded photograph, including those without a match or a classified pedestrian.
 
 \begin{table}[!ht]
@@ -152,7 +153,7 @@ After collecting the images, Global Streetscapes assigned each camera location t
 \label{tab:road_types}
 \footnotesize
 \begin{threeparttable}
-\input{../tabs/tableB1_road_types}
+\input{../tabs/tableA2_road_types}
 \begin{tablenotes}[flushleft]\footnotesize
 \item Each column uses all coded photographs in that region. Connecting ramps count toward the road class they serve. Other or mixed includes less common tags and segments with multiple tags. Unmatched photographs have no recorded road class.
 \end{tablenotes}
@@ -164,7 +165,7 @@ Figure~\ref{fig:coverage} shows the camera locations. In the New Delhi panel, te
 \clearpage
 \begin{figure}[!ht]
 \centering
-\includegraphics[width=.96\textwidth]{../figs/figB1_photo_locations.pdf}
+\includegraphics[width=.96\textwidth]{../figs/figA1_photo_locations.pdf}
 \caption{Camera locations in two sampled cities. Each dot marks one coded photograph. Nearby or repeated camera positions overlap. New Delhi is the site of the earlier benchmark study. London contributed the most classified pedestrian sightings. Map data \copyright{} OpenStreetMap contributors.}
 \label{fig:coverage}
 \end{figure}
@@ -174,7 +175,7 @@ Figure~\ref{fig:coverage} shows the camera locations. In the New Delhi panel, te
 \caption{Road and path classes near camera locations and in the mapped network.}
 \label{tab:network}
 \begin{threeparttable}
-\input{../tabs/tableB2_network}
+\input{../tabs/tableA3_network}
 \begin{tablenotes}[flushleft]\footnotesize
 \item Length is the share of mapped street and path kilometers inside each panel of Figure~\ref{fig:coverage}. We count each mapped line once, including separately mapped sidewalks and carriageways. The photo columns use all coded photographs in each panel. The network columns use linear features, including paths through squares where mapped. A plaza mapped as an area contributes no length of its own. Photo matches come from the Global Streetscapes release. Street lengths use a later OpenStreetMap extract, so changes in mapping can also contribute to differences.
 \end{tablenotes}
@@ -194,7 +195,7 @@ For each photograph we model the share of classified pedestrians coded as women,
 \caption{Regional pedestrian shares before and after adjustment for capture time.}
 \label{tab:regional_timing}
 \begin{threeparttable}
-\input{../tabs/tableC1_timing}
+\input{../tabs/tableB1_timing}
 \begin{tablenotes}[flushleft]\footnotesize
 \item Entries give percentages of classified pedestrian sightings coded as women. Sightings gives the count in the common window with a valid local date. The final two columns use the same sightings. For the adjusted intervals we resampled cities within each region and refit the model, holding the reference time mix fixed.
 \end{tablenotes}
@@ -211,7 +212,7 @@ Figure~\ref{fig:capture_time} compares photographs taken at different times with
 
 \begin{figure}[!ht]
 \centering
-\includegraphics[width=.85\textwidth]{../figs/figC1_capture_time.pdf}
+\includegraphics[width=.85\textwidth]{../figs/figB1_within_city_timing.pdf}
 \caption{Differences in the share of classified pedestrian sightings coded as women. Evening covers 6 p.m. to before 10 p.m. local time and daytime covers 6 a.m. to before 6 p.m. Both comparisons use photographs from these hours with a valid local date. Points give estimated differences and bars give 95\% confidence intervals allowing observations from the same city to vary together.}
 \label{fig:capture_time}
 \end{figure}
@@ -227,6 +228,6 @@ Table~\ref{tab:residents} gives the comparisons city by city. We matched 43 of t
 Population counts cover all ages. The image counts cover people the model could classify as adolescent or adult pedestrians. The cameras covered selected public places within a map tile, while population counts cover administrative areas, such as Tokyo’s 23 wards. Migration also enters the counts differently across places. The \href{https://www.census.gov/programs-surveys/decennial-census/decade/2020/about/residence-rule.html}{U.S. census} counts foreign citizens where they usually live and sleep. Singapore’s reported total includes people it designates as nonresidents. We cannot verify how completely each source enumerates temporary workers. A gap between columns can reflect where people live, who visits, how often and how long people spend in view, and whom the model can classify. Estimating a resident’s probability of going out would require observing residents and their trips.
 
 {\small\singlespacing
-\input{../tabs/tableD1_residents}
+\input{../tabs/tableC1_residents}
 }
 \end{document}

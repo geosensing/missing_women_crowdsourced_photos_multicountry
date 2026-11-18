@@ -140,7 +140,7 @@ def road_table(frame):
     table.columns = [r"\shortstack{" + label + "}" for label in [*regions.values(), "All"]]
     write_table(
         table.rename_axis("Street type").reset_index(),
-        Path("tabs/tableB1_road_types.tex"),
+        Path("tabs/tableA2_road_types.tex"),
         "lrrrrrrr",
         escape=False,
     )
@@ -178,7 +178,7 @@ def time_figure(estimates):
     ax.set_ylim(-0.6, 8.1)
     ax.tick_params(axis="y", length=0)
     ax.spines["left"].set_visible(False)
-    fig.savefig("figs/figC1_capture_time.pdf")
+    fig.savefig("figs/figB1_within_city_timing.pdf")
     plt.close(fig)
 
 
@@ -360,9 +360,9 @@ def maps(frame):
         km_pct.loc["Unmatched"] = "—"
         columns[(city + " map area", "Photos (%)")] = [*photo_pct, f"{area.photos.sum():.0f}", ""]
         columns[(city + " map area", "Length (%)")] = [*km_pct, "", f"{area.km.sum():.1f}"]
-    write_table(pd.DataFrame(columns), Path("tabs/tableB2_network.tex"), "lrrrr")
+    write_table(pd.DataFrame(columns), Path("tabs/tableA3_network.tex"), "lrrrr")
     fig.tight_layout(pad=0.3)
-    fig.savefig("figs/figB1_photo_locations.pdf")
+    fig.savefig("figs/figA1_photo_locations.pdf")
     plt.close(fig)
 
 

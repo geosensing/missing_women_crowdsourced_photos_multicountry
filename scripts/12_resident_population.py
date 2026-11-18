@@ -54,7 +54,7 @@ def main():
     for label, col in [("Population", "resident_pct"), ("Photographs", "photo_pct")]:
         table[label] = table[col].map(lambda n: f"{n:.1f}" if pd.notna(n) else "—")
     table[["City", "Pop. year", "Photo years", "Sightings", "Population", "Photographs"]].to_latex(
-        ROOT / "tabs/tableD1_residents.tex",
+        ROOT / "tabs/tableC1_residents.tex",
         index=False,
         escape=True,
         longtable=True,
