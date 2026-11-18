@@ -21,6 +21,7 @@ figs:
 	uv run --with pandas --with jinja2 --with numpy python3 scripts/10_eval_calibration.py
 
 	python3 scripts/11_photo_context.py
+	python3 scripts/12_resident_population.py
 
 note: figs
 	cd ms && latexmk -pdf -interaction=nonstopmode note.tex

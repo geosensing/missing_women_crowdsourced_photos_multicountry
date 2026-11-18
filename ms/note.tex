@@ -2,7 +2,7 @@
 \usepackage{working-paper}
 \usepackage{amsmath}
 \usepackage{graphicx}
-\usepackage{booktabs}
+\usepackage{booktabs,longtable}
 \usepackage{multirow}
 \usepackage{threeparttable}
 \usepackage{placeins}
@@ -30,7 +30,7 @@ For a street vendor, the pavement is a workplace. A commuter may pass the same s
 
 Those opportunities and obligations can differ by gender. Concerns about harassment can shape where women go and how they get there \citep{phadke2011,borker2021safety,kondylis2025safespace}. Employment also shapes who has occasion to leave home. In India’s 2024 Time Use Survey, 25\% of women aged 15--59 and 75\% of men that age reported employment or related activities on the diary day \citep{nso2025timeuse}. Even among people in the same industry, the location of work can differ. In 2017--18, 72\% of women employed in apparel manufacturing in India were home-based workers, compared with 24\% of men in that industry \citep[Table~6]{raveendran2020home}.\footnote{Apparel making and custom tailoring together grew from 28.5\% of India’s unorganized manufacturing establishments in 2015--16 to 44.3\% in 2023--24 \citep[Table~3]{mohanan2025manufacturing}.} A tailor sewing at home can put in a full day’s paid work without making a commute. The jobs she can take may themselves depend on how far she can travel safely and who looks after her children. A photograph can show a difference in who is present. It cannot tell us how much of that difference arose from the jobs available to women, the journeys those jobs require, or constraints on making those journeys.
 
-Labor migration can also change who lives in a city. In the emirate of Dubai, 68.7\% of residents were male at the end of 2022. The emirate’s statistical office attributes this imbalance in part to men who came from abroad for work without their families \citep[Table~1 and Section~2]{dubai2022population}. Even if women and men spent equal time outside, a city with more male residents could yield more sightings of men. The photographs do not tell us who migrated.
+Labor migration can also change who lives in a city. In the emirate of Dubai, 68.7\% of residents were male at the end of 2022. The emirate’s statistical office attributes this imbalance in part to men who came from abroad for work without their families \citep[Table~1 and Section~2]{dubai2022population}. Even if women and men spent equal time outside, a city with more male residents could yield more sightings of men. Appendix~\ref{sec:residents} compares the sex composition of local populations with the pedestrians in photographs taken around the same time.
 
 Travel surveys document differences in how women and men move through cities \citep{goel2022mobility,goel2023gendergap}. Photographs also record people who stay in one place, a feature earlier studies have used to examine women’s presence and social activity in public space \citep{turku2021walking,elrod2025sociability}. An early Delhi study counted people in 1,958 photographs taken at 196 locations \citep{sood2017womencount}. Later studies used wearable cameras and Google Street View in several Indian cities \citep{karekurve2026streetscope,sood2026streetsight}. Here we ask how the share of pedestrian sightings classified as women varies across regions in photographs from \TotalCountries{} countries. We report a separate share for two-wheeler riders and return to New Delhi to compare our estimates with the earlier counts.
 
@@ -216,4 +216,17 @@ Figure~\ref{fig:capture_time} compares photographs taken at different times with
 \label{fig:capture_time}
 \end{figure}
 
+\clearpage
+\section{Who Lives in the City and Who Appears in the Photographs?}
+\label{sec:residents}
+
+In Faisalabad, females made up 48.5\% of the population in the 2017 census. In photographs taken that year, the model counted 18 women among 283 classified pedestrians (6.4\%). In Prague the two shares were much closer, at 51.4\% and 50.4\%. Dubai illustrates why the choice of benchmark matters. Females made up 30.0\% of the emirate’s residents in 2018 and women accounted for 12.1\% of classified pedestrian sightings in nearby years. The same bulletin estimated that 3.19 million people lived in the emirate and 4.38 million were there at peak hours, including commuters and visitors.\footnote{Dubai Statistics Center, \href{https://www.dsc.gov.ae/Publication/Population\%20Bulletin\%20Emirate\%20of\%20Dubai\%202018.pdf}{\emph{Population Bulletin, Emirate of Dubai, 2018}}, Tables 1 and 2.}
+
+Table~\ref{tab:residents} gives the comparisons city by city. We matched 43 of the 101 sampled cities to final, residence-based city-proper records in the \href{https://data.un.org/legacy/Data.aspx?d=POP\&f=tableCode:240}{UN Statistics Division’s city population series}. We also used the local bulletin for Dubai and the \href{https://www.nomisweb.co.uk/datasets/c2021ts008}{2021 census for Greater London}, the city with the most sightings. We chose the population year nearest the median year of the city’s coded photographs, allowing at most two years in either direction. We then counted only sightings from photographs taken within two years of that population year. Seoul had no classified pedestrians in that window. In 33 of the remaining 44 cities, the share of pedestrians classified as women was below the female population share. Some counts were small. Among the 20 cities with at least 100 classified sightings, 16 showed the same pattern.
+
+Population counts cover all ages. The image counts cover people the model could classify as adolescent or adult pedestrians. The cameras covered selected public places within a map tile, while population counts cover administrative areas, such as Tokyo’s 23 wards. Migration also enters the counts differently across places. The \href{https://www.census.gov/programs-surveys/decennial-census/decade/2020/about/residence-rule.html}{U.S. census} counts foreign citizens where they usually live and sleep. Singapore’s reported total includes people it designates as nonresidents. We cannot verify how completely each source enumerates temporary workers. A gap between columns can reflect where people live, who visits, how often and how long people spend in view, and whom the model can classify. Estimating a resident’s probability of going out would require observing residents and their trips.
+
+{\small\singlespacing
+\input{../tabs/tableD1_residents}
+}
 \end{document}
