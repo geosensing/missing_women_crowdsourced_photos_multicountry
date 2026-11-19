@@ -1,6 +1,6 @@
 """Generate Appendix Table A1: empirical pixel-area threshold and regional bias check.
 
-Joins outputs/muse_counts_round1.csv and outputs/selected_images.csv with
+Joins outputs/muse_counts_all.csv and outputs/selected_images.csv with
 Mask2Former Person+Rider pixel counts from data/parquet/segmentation.parquet,
 and writes tabs/tableA1_pixel_threshold.tex (Panel A: global threshold curve;
 Panel B: regional pedestrian female share at pix >= 0 vs. pix >= 5,000).
@@ -70,7 +70,7 @@ def main() -> None:
     args = parser.parse_args()
 
     with args.images_csv.open(newline="", encoding="utf-8") as handle:
-        metadata = [r for r in csv.DictReader(handle) if r["wave"] in {"round1", "round2"}]
+        metadata = list(csv.DictReader(handle))
         meta = {r["uuid"]: r for r in metadata}
     with args.counts_csv.open(newline="", encoding="utf-8") as handle:
         counts = list(csv.DictReader(handle))
@@ -78,7 +78,7 @@ def main() -> None:
     if len(meta) != len(metadata) or len(muse) != len(counts):
         raise ValueError("Repeated image IDs in metadata or count records")
     if missing := muse.keys() - meta.keys():
-        raise ValueError(f"{len(missing)} coded images are absent from Rounds 1-2 selections")
+        raise ValueError(f"{len(missing)} coded images are absent from the selection file")
 
     revision = json.loads(args.config.read_text(encoding="utf-8"))["corpus_revision"]
     pix = load_person_pixels(set(muse), revision)

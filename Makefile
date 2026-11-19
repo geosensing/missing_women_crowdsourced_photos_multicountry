@@ -1,6 +1,6 @@
 .PHONY: benchmark bib sample sample-images figs note test lint clean
 
-STREETSCOPE ?= ../streetscope
+STREETSCOPE ?= ../missing_women_bike_camera_india
 
 benchmark:
 	python3 scripts/01_gpt4o_benchmark.py \
@@ -16,6 +16,7 @@ sample-images:
 	python3 scripts/04_sample_images.py
 
 figs:
+	python3 scripts/14_combine_rounds.py
 	uv run --with matplotlib --with pandas --with jinja2 --with numpy python3 scripts/07_make_note_outputs.py
 	python3 scripts/08_pixel_threshold_check.py
 	uv run --with pandas --with jinja2 --with numpy python3 scripts/10_eval_calibration.py

@@ -9,10 +9,11 @@
 \RequirePackage{setspace}
 \setstretch{1.17}
 \RequirePackage{titlesec}
-\titleformat{\section}{\normalfont\Large\scshape}{\thesection}{.65em}{}
-\titleformat{\subsection}{\normalfont\large\itshape}{\thesubsection}{.65em}{}
+\setcounter{secnumdepth}{0}
+\titleformat{\section}{\normalfont\Large\bfseries}{}{0pt}{}
+\titleformat{\subsection}{\normalfont\large\itshape}{}{0pt}{}
 \RequirePackage[round,authoryear]{natbib}
-\setcitestyle{round,aysep={,},yysep={,},citesep={;}}
+\setcitestyle{round,aysep={},yysep={,},citesep={;}}
 \RequirePackage[font=small,labelfont=bf,labelsep=period]{caption}
 \RequirePackage{etoolbox}
 \AtEndPreamble{\RequirePackage[hidelinks]{hyperref}}

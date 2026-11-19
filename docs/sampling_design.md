@@ -1,12 +1,12 @@
 # City and image sampling design
 
-The study describes people a vision model could classify in sampled ground-level photographs. Its city frame consists of the 688 cities in Global Streetscapes. The available photographs depend on which places, dates, and viewpoints contributors recorded within the source collection’s tiles. The pooled Round 1 share gives each classified pedestrian sighting equal weight. Representing another population requires specifying which cities, photographs or people should count, and accounting for selection and missing observations.
+The study describes people a vision model could classify in sampled ground-level photographs. Its city frame consists of the 688 cities in Global Streetscapes. The available photographs depend on which places, dates, and viewpoints contributors recorded within the source collection’s tiles. The pooled share gives each classified pedestrian sighting equal weight. Representing another population requires specifying which cities, photographs or people should count, and accounting for selection and missing observations.
 
 ## Selecting cities
 
 The frozen city list supplies city population and image counts. World Bank records supply national GDP per capita at purchasing power parity, national population and region. A city qualified with at least 400 corpus images, a recorded population and a recorded national GDP figure. Of 688 cities, 543 qualified. The selection includes 101 cities in 88 countries. New Delhi and Faisalabad entered with certainty as benchmarks. The published seed is 20261115. [Sampling configuration](../config/sampling.json)
 
-| Region | Cities in frame | Eligible | Selected | Inference images drawn across both rounds |
+| Region | Cities in frame | Eligible | Selected | Ranked inference pool (up to 500 per city) |
 |---|---:|---:|---:|---:|
 | Americas | 211 | 178 | 25 | 11,754 |
 | East Asia & Pacific | 117 | 94 | 18 | 9,000 |
@@ -44,6 +44,8 @@ Within each city, the draw orders positive-mask image IDs by the SHA-256 hash of
 | Coded | 9,835 |
 
 The Round 1 draw includes 9,268 Mapillary and 832 KartaView IDs. Coded coverage varies across cities, including 20 of 100 drawn in Seoul and 58 of 100 in Jakarta. An image ID denotes a corpus record. Some records have byte-identical photographs.
+
+The third batch used ranks 201 through 300. Across the three batches, 29,659 image IDs were selected, 29,081 downloads succeeded, and 28,794 yielded counts.
 
 ### Round 2 and the pixel cutoff
 

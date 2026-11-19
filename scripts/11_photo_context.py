@@ -368,6 +368,8 @@ def maps(frame):
 
 if __name__ == "__main__":
     data = assemble()
+    data["wave"] = "round" + ((data.rank_in_city.astype(int) - 1) // 100 + 1).astype(str)
+    data.to_csv(OUT / "coded_photo_place_metadata.csv", index=False)
     regional_timing(data)
     road_table(data)
     road_contrast(data)

@@ -16,7 +16,12 @@ def main():
         raise ValueError("Duplicate photo or city identifier")
     if not (photos.women_count + photos.men_count).eq(photos.n).all():
         raise ValueError("Classified pedestrian counts disagree")
-    median = photos.groupby("city_id").year.median().rename("median_photo_year")
+    coded = pd.read_csv(ROOT / "outputs/muse_counts_all.csv", usecols=["image"])
+    if set(coded.image.str.removesuffix(".jpg")) != set(photos.uuid):
+        raise ValueError("Resident comparison and manuscript use different sets of photographs")
+    median = (
+        photos.loc[photos.date.notna()].groupby("city_id").year.median().rename("median_photo_year")
+    )
     records = records.join(median, on="city_id")
     records["distance"] = (records.Year - records.median_photo_year).abs()
     records = records.loc[records.distance <= WINDOW].sort_values(
@@ -44,6 +49,25 @@ def main():
     result["gap_pp"] = result.photo_pct - result.resident_pct
     result.to_csv(ROOT / "outputs/city_resident_comparison.csv", index=False)
     table = result.dropna(subset=["Year"]).copy()
+    supported = table.loc[table.sightings >= 100]
+    macros = {
+        "ResidentUNCities": str(table.source.eq("UNdata 240").sum()),
+        "ResidentPaired": str(table.photo_pct.notna().sum()),
+        "ResidentBelow": str(table.gap_pp.lt(0).sum()),
+        "ResidentLarge": str(len(supported)),
+        "ResidentLargeBelow": str(supported.gap_pp.lt(0).sum()),
+    }
+    examples = table.set_index("city_ascii")
+    for city in ["Faisalabad", "Dubai", "Prague"]:
+        row = examples.loc[city]
+        macros[city + "Population"] = f"{row.resident_pct:.1f}"
+        macros[city + "Photographs"] = f"{row.photo_pct:.1f}"
+        macros[city + "Year"] = str(int(row.Year))
+    macros["FaisalabadWomen"] = str(int(examples.loc["Faisalabad", "women"]))
+    macros["FaisalabadCount"] = str(int(examples.loc["Faisalabad", "sightings"]))
+    (ROOT / "tabs/resident_macros.tex").write_text(
+        "".join(rf"\newcommand{{\{name}}}{{{value}}}" + "\n" for name, value in macros.items())
+    )
     table["Photo years"] = [
         str(int(a)) if a == b else f"{int(a)}–{int(b)}"
         for a, b in zip(table.photo_start, table.photo_end)

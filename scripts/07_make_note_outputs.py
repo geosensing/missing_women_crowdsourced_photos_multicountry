@@ -235,6 +235,7 @@ def main() -> None:
         default=[
             Path("outputs/download_manifest_round1.csv"),
             Path("outputs/download_manifest_round2.csv"),
+            Path("outputs/download_manifest_round3.csv"),
         ],
     )
     parser.add_argument("--figs-dir", type=Path, default=Path("figs"))
