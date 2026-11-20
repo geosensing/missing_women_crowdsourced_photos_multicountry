@@ -4,7 +4,7 @@ title: "Women and Men on Urban Streets: Evidence from Crowdsourced Photographs i
 authors:
   - family-names: Sood
     given-names: Gaurav
-repository-code: "https://github.com/geosensing/missing_women_crowdsourced_photos_multicountry"
+repository-code: "https://github.com/geosensing/mw_crowdphotos"
 preferred-citation:
   type: unpublished
   title: "Women and Men on Urban Streets: Evidence from Crowdsourced Photographs in 101 Cities"
@@ -12,4 +12,4 @@ preferred-citation:
     - family-names: Sood
       given-names: Gaurav
   year: 2026
-  url: "https://github.com/geosensing/missing_women_crowdsourced_photos_multicountry"
+  url: "https://github.com/geosensing/mw_crowdphotos"

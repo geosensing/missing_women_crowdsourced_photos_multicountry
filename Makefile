@@ -1,6 +1,6 @@
 .PHONY: benchmark bib sample sample-images figs note test lint clean
 
-STREETSCOPE ?= ../missing_women_bike_camera_india
+STREETSCOPE ?= ../mw_bikecam_india
 
 benchmark:
 	python3 scripts/01_gpt4o_benchmark.py \
