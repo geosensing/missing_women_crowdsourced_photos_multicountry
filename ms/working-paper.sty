@@ -15,5 +15,13 @@
 \RequirePackage[round,authoryear]{natbib}
 \setcitestyle{round,aysep={},yysep={,},citesep={;}}
 \RequirePackage[font=small,labelfont=bf,labelsep=period]{caption}
+\AddToHook{cmd/appendix/after}{%
+  \setcounter{secnumdepth}{1}%
+  \titleformat{\section}{\normalfont\Large\bfseries}{Appendix~\thesection}{.6em}{}%
+  \counterwithin*{table}{section}%
+  \counterwithin*{figure}{section}%
+  \renewcommand{\thetable}{\thesection\arabic{table}}%
+  \renewcommand{\thefigure}{\thesection\arabic{figure}}%
+}
 \RequirePackage{etoolbox}
 \AtEndPreamble{\RequirePackage[hidelinks]{hyperref}}
